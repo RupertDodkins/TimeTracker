@@ -1,7 +1,7 @@
 """GUI architecture goes here"""
 
 from PyQt5.QtCore import pyqtSlot, QTimer, QTime
-from PyQt5 import Qt
+from PyQt5 import Qt, QtCore
 from PyQt5.QtWidgets import QComboBox, QFormLayout, QHBoxLayout, QVBoxLayout, QLineEdit, QWidget, QPushButton, \
     QProgressBar, QRadioButton, QSlider, QLabel, QMainWindow
 from PyQt5.uic import loadUi
@@ -17,7 +17,7 @@ class Dashboard(QMainWindow):
         title = 'Daily Dashboard'
         left = 10
         top = 10
-        width = 800
+        width = 820
         height = 1250
         self.setWindowTitle(title)
         self.setGeometry(left, top, width, height)
@@ -30,6 +30,31 @@ class Dashboard(QMainWindow):
         self.timer.timeout.connect(self.tick)
 
         self.do_reset()
+
+        for checkboxes in [self.checkBox, self.checkBox_2, self.checkBox_3]:
+            checkboxes.stateChanged.connect(self.clickBox)
+        self.score = 0
+
+    def set_todo(self, text):
+        self.checkBox.setText("lol")
+        self.checkBox_2.setText("lol1")
+        self.checkBox_3.setText("Item 2")
+
+    def clickBox(self, state):
+        if state == QtCore.Qt.Checked:
+            print('Checked')
+            self.add_prog()
+        else:
+            print('Unchecked')
+            self.sub_prog()
+
+    def add_prog(self):
+        self.score += 100./3
+        self.progressBar.setValue(self.score)
+
+    def sub_prog(self):
+        self.score -= 100./3
+        self.progressBar.setValue(self.score)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Qt.Key_Escape:

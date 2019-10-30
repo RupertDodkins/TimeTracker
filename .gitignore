@@ -1,2 +1,4 @@
 .DS_Store
 venv/**
+timetracker/Dashboard/__pycache__
+timetracker/Dashboard/stopwatch*
