@@ -1,43 +1,68 @@
 """GUI architecture goes here"""
 
-from PyQt5.QtCore import pyqtSlot, Qt
+from PyQt5.QtCore import pyqtSlot, QTimer, QTime
+from PyQt5 import Qt
 from PyQt5.QtWidgets import QComboBox, QFormLayout, QHBoxLayout, QVBoxLayout, QLineEdit, QWidget, QPushButton, \
-    QProgressBar, QRadioButton, QSlider, QLabel
+    QProgressBar, QRadioButton, QSlider, QLabel, QMainWindow
+from PyQt5.uic import loadUi
+# from gui import Ui_MainWindow
 
-class Dashboard(QWidget):
+TICK_TIME = 2**6
+
+class Dashboard(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.ui = loadUi("Dashboard/gui.ui", self)
 
-        self.pushButtonIn = QPushButton(self)
-        self.pushButtonIn.setText("Clock In")
-        self.pushButtonIn.clicked.connect(self.In_clicked)
+        title = 'Daily Dashboard'
+        left = 10
+        top = 10
+        width = 800
+        height = 1250
+        self.setWindowTitle(title)
+        self.setGeometry(left, top, width, height)
 
-        self.pushButtonOut = QPushButton(self)
-        self.pushButtonOut.setText("Clock Out")
-        self.pushButtonOut.clicked.connect(self.Out_clicked)
+        self.reset.clicked.connect(self.do_reset)
+        self.start.clicked.connect(self.do_start)
 
-        self.topHPanel = QHBoxLayout()
-        self.topHPanel.addWidget(self.pushButtonIn)
-        self.topHPanel.addWidget(self.pushButtonOut)
+        self.timer = QTimer()
+        self.timer.setInterval(TICK_TIME)
+        self.timer.timeout.connect(self.tick)
 
-        self.buttonParaWaveVBox = QVBoxLayout()
-        self.buttonParaWaveVBox.addLayout(self.topHPanel)
+        self.do_reset()
 
-        # Main layout
-        self.parentHlayout = QHBoxLayout()
-        self.parentHlayout.addLayout(self.buttonParaWaveVBox)
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Qt.Key_Escape:
+            self.close()
+        else:
+            super().keyPressEvent(event)
 
-        self.setLayout(self.parentHlayout)
+    def display(self):
+        self.lcd.display("%d:%05.2f" % (self.time // 60, self.time % 60))
 
-        self.left = 10
-        self.top = 10
-        self.width = 800
-        self.height = 1250
-        self.title = 'Daily Dashboard'
-        self.setWindowTitle(self.title)
-        self.setGeometry(self.left, self.top, self.width, self.height)
+    @Qt.pyqtSlot()
+    def tick(self):
+        self.time -= TICK_TIME / 1000
+        self.display()
 
-        self.show()
+    @Qt.pyqtSlot()
+    def do_start(self):
+        self.timer.start()
+        self.start.setText("Pause")
+        self.start.clicked.disconnect()
+        self.start.clicked.connect(self.do_pause)
+
+    @Qt.pyqtSlot()
+    def do_pause(self):
+        self.timer.stop()
+        self.start.setText("Start")
+        self.start.clicked.disconnect()
+        self.start.clicked.connect(self.do_start)
+
+    @Qt.pyqtSlot()
+    def do_reset(self):
+        self.time = 25
+        self.display()
 
     @pyqtSlot()
     def In_clicked(self):
@@ -46,3 +71,8 @@ class Dashboard(QWidget):
     @pyqtSlot()
     def Out_clicked(self):
         print('not implemented')
+
+    # def showTime(self):
+    #     time = QTime.currentTime()
+    #     text = time.toString('hh:mm')
+    #     self.display(text)

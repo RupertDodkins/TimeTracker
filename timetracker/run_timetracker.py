@@ -7,6 +7,7 @@ def run_dashboard():
     app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName('Dashboard')
     main = Dashboard()
+    main.show()
     app.exec_()
 
 if __name__=="__main__":
