@@ -1,11 +1,9 @@
-"""GUI architecture goes here"""
+"""GUI functionality"""
 
-from PyQt5.QtCore import pyqtSlot, QTimer, QTime
+from PyQt5.QtCore import pyqtSlot, QTimer
 from PyQt5 import Qt, QtCore
-from PyQt5.QtWidgets import QComboBox, QFormLayout, QHBoxLayout, QVBoxLayout, QLineEdit, QWidget, QPushButton, \
-    QProgressBar, QRadioButton, QSlider, QLabel, QMainWindow
+from PyQt5.QtWidgets import QMainWindow
 from PyQt5.uic import loadUi
-# from gui import Ui_MainWindow
 
 TICK_TIME = 2**6
 
@@ -13,6 +11,10 @@ class Dashboard(QMainWindow):
     def __init__(self):
         super().__init__()
         self.ui = loadUi("Dashboard/gui.ui", self)
+
+        self.todo_score = 0
+        self.work_time = 0.
+        self.goal_time = 4*60*60
 
         title = 'Daily Dashboard'
         left = 10
@@ -33,12 +35,6 @@ class Dashboard(QMainWindow):
 
         for checkboxes in [self.checkBox, self.checkBox_2, self.checkBox_3]:
             checkboxes.stateChanged.connect(self.clickBox)
-        self.score = 0
-
-    def set_todo(self, text):
-        self.checkBox.setText("lol")
-        self.checkBox_2.setText("lol1")
-        self.checkBox_3.setText("Item 2")
 
     def clickBox(self, state):
         if state == QtCore.Qt.Checked:
@@ -49,12 +45,15 @@ class Dashboard(QMainWindow):
             self.sub_prog()
 
     def add_prog(self):
-        self.score += 100./3
+        self.todo_score += 100./3
         self.progressBar.setValue(self.score)
 
     def sub_prog(self):
-        self.score -= 100./3
+        self.todo_score -= 100./3
         self.progressBar.setValue(self.score)
+
+    def prog_time(self):
+        self.progressBar_2.setValue(self.work_time/self.goal_time * 100)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Qt.Key_Escape:
@@ -69,6 +68,9 @@ class Dashboard(QMainWindow):
     def tick(self):
         self.time -= TICK_TIME / 1000
         self.display()
+
+        self.work_time += TICK_TIME / 1000
+        self.prog_time()
 
     @Qt.pyqtSlot()
     def do_start(self):
@@ -96,8 +98,3 @@ class Dashboard(QMainWindow):
     @pyqtSlot()
     def Out_clicked(self):
         print('not implemented')
-
-    # def showTime(self):
-    #     time = QTime.currentTime()
-    #     text = time.toString('hh:mm')
-    #     self.display(text)
