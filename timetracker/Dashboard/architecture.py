@@ -26,6 +26,7 @@ class Dashboard(QMainWindow):
 
         self.reset.clicked.connect(self.do_reset)
         self.start.clicked.connect(self.do_start)
+        self.break_2.clicked.connect(self.do_break)
 
         self.timer = QTimer()
         self.timer.setInterval(TICK_TIME)
@@ -62,7 +63,8 @@ class Dashboard(QMainWindow):
             super().keyPressEvent(event)
 
     def display(self):
-        self.lcd.display("%d:%05.2f" % (self.time // 60, self.time % 60))
+        # self.lcd.display("%d:%.2f" % (self.time // 60, self.time % 60))
+        self.lcd.display("%d:%d" % (self.time // 60, self.time % 60))
 
     @Qt.pyqtSlot()
     def tick(self):
@@ -88,7 +90,12 @@ class Dashboard(QMainWindow):
 
     @Qt.pyqtSlot()
     def do_reset(self):
-        self.time = 25
+        self.time = 25*60
+        self.display()
+
+    @Qt.pyqtSlot()
+    def do_break(self):
+        self.time = 5*60
         self.display()
 
     @pyqtSlot()
