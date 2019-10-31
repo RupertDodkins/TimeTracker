@@ -16,11 +16,11 @@ class Dashboard(QMainWindow):
         self.work_time = 0.
         self.goal_time = 4*60*60
 
-        title = 'Daily Dashboard'
-        left = 10
-        top = 10
-        width = 820
-        height = 1250
+        title = 'Dashboard'
+        left = 500
+        top = 100
+        width = 650
+        height = 775
         self.setWindowTitle(title)
         self.setGeometry(left, top, width, height)
 
