@@ -15,6 +15,7 @@ class Dashboard(QMainWindow):
         self.todo_score = 0
         self.work_time = 0.
         self.goal_time = 4*60*60
+        self.break_mode = False
 
         title = 'Dashboard'
         left = 500
@@ -56,6 +57,9 @@ class Dashboard(QMainWindow):
     def prog_time(self):
         self.progressBar_2.setValue(self.work_time/self.goal_time * 100)
 
+    def disp_time(self):
+        self.label_4.setText('%d' % (self.work_time/60))
+
     def keyPressEvent(self, event):
         if event.key() == Qt.Qt.Key_Escape:
             self.close()
@@ -71,8 +75,10 @@ class Dashboard(QMainWindow):
         self.time -= TICK_TIME / 1000
         self.display()
 
-        self.work_time += TICK_TIME / 1000
-        self.prog_time()
+        if not self.break_mode:
+            self.work_time += TICK_TIME / 1000
+            self.prog_time()
+            self.disp_time()
 
     @Qt.pyqtSlot()
     def do_start(self):
@@ -91,11 +97,13 @@ class Dashboard(QMainWindow):
     @Qt.pyqtSlot()
     def do_reset(self):
         self.time = 25*60
+        self.break_mode = False
         self.display()
 
     @Qt.pyqtSlot()
     def do_break(self):
         self.time = 5*60
+        self.break_mode = True
         self.display()
 
     @pyqtSlot()
