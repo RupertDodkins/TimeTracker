@@ -20,8 +20,8 @@ class Dashboard(QMainWindow):
         title = 'Dashboard'
         left = 500
         top = 100
-        width = 630
-        height = 610
+        width = 640
+        height = 900
         self.setWindowTitle(title)
         self.setGeometry(left, top, width, height)
 
@@ -37,6 +37,10 @@ class Dashboard(QMainWindow):
 
         for checkboxes in [self.checkBox_1, self.checkBox_2, self.checkBox_3]:
             checkboxes.stateChanged.connect(self.clickBox)
+
+        for i in range(1,7):
+            errands_label = getattr(self, f"errands_label_{i}")
+            self.comboBox.addItem(errands_label.text())
 
     def clickBox(self, state):
         if state == QtCore.Qt.Checked:
@@ -66,7 +70,7 @@ class Dashboard(QMainWindow):
 
     def display(self):
         # self.lcd.display("%d:%.2f" % (self.time // 60, self.time % 60))
-        self.lcd.display("%d:%d" % (self.time // 60, self.time % 60))
+        self.lcd.display("%d:%.2d" % (self.time // 60, self.time % 60))
 
     @Qt.pyqtSlot()
     def tick(self):
