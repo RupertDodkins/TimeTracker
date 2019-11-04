@@ -1,5 +1,6 @@
 """GUI functionality"""
 
+import numpy as np
 from PyQt5.QtCore import pyqtSlot, QTimer
 from PyQt5 import Qt, QtCore
 from PyQt5.QtWidgets import QMainWindow
@@ -12,9 +13,15 @@ class Dashboard(QMainWindow):
         super().__init__()
         self.ui = loadUi("Dashboard/gui.ui", self)
 
+        self.errands = np.array(['Drink 3 bottles', 'Read paper', 'Get result for Ben', 'Meditate', 'NN',
+                                 'Update YNAB'])
+        self.errand_amounts = np.array([3., 1, 1, 1, 1, 1])
+        self.errand_scores = np.zeros_like((self.errand_amounts))
+
         self.todo_score = 0
         self.work_time = 0.
         self.goal_time = 4*60*60
+        self.errand_score = 0
         self.break_mode = False
 
         title = 'Dashboard'
@@ -38,9 +45,32 @@ class Dashboard(QMainWindow):
         for checkboxes in [self.checkBox_1, self.checkBox_2, self.checkBox_3]:
             checkboxes.stateChanged.connect(self.clickBox)
 
-        for i in range(1,7):
-            errands_label = getattr(self, f"errands_label_{i}")
-            self.comboBox.addItem(errands_label.text())
+        self.comboBox.addItems(errand for errand in self.errands)
+        self.comboBox.activated[str].connect(self.check_errand)
+
+    def check_errand(self, text):
+        errand_ind = np.where(text == self.errands)[0][0]
+        self.prog_errand(errand_ind)
+        self.progressBar_3.setValue(self.errand_score)
+
+    def prog_errand(self, errand_ind):
+        progressbar = getattr(self, f"errand_progressBar_{errand_ind}")
+
+        errand_amount = self.errand_amounts[errand_ind]
+        errand_complete_yet = self.errand_scores[errand_ind] == 100#errand_amount
+        print(errand_ind, progressbar.value(), errand_complete_yet, self.errand_scores[errand_ind], 'here', 100. / errand_amount)
+
+        if errand_complete_yet:
+            self.errand_score -= 100./len(self.errands)
+            self.errand_scores[errand_ind] =0#-= 100. / errand_amount
+            progressbar.setValue(self.errand_scores[errand_ind])
+        else:
+            self.errand_score += 100./(len(self.errands)*errand_amount)
+            self.errand_scores[errand_ind] += 100. / errand_amount
+            progressbar.setValue(self.errand_scores[errand_ind])
+        print(errand_ind, progressbar.value(), errand_complete_yet, self.errand_scores[errand_ind], 'here',
+              100. / errand_amount)
+        # print(progressbar.value(), 100./errand_amount)
 
     def clickBox(self, state):
         if state == QtCore.Qt.Checked:
