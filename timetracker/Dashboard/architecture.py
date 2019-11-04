@@ -20,8 +20,8 @@ class Dashboard(QMainWindow):
         title = 'Dashboard'
         left = 500
         top = 100
-        width = 650
-        height = 775
+        width = 630
+        height = 610
         self.setWindowTitle(title)
         self.setGeometry(left, top, width, height)
 
@@ -35,24 +35,22 @@ class Dashboard(QMainWindow):
 
         self.do_reset()
 
-        for checkboxes in [self.checkBox, self.checkBox_2, self.checkBox_3]:
+        for checkboxes in [self.checkBox_1, self.checkBox_2, self.checkBox_3]:
             checkboxes.stateChanged.connect(self.clickBox)
 
     def clickBox(self, state):
         if state == QtCore.Qt.Checked:
-            print('Checked')
             self.add_prog()
         else:
-            print('Unchecked')
             self.sub_prog()
 
     def add_prog(self):
         self.todo_score += 100./3
-        self.progressBar.setValue(self.score)
+        self.progressBar.setValue(self.todo_score)
 
     def sub_prog(self):
         self.todo_score -= 100./3
-        self.progressBar.setValue(self.score)
+        self.progressBar.setValue(self.todo_score)
 
     def prog_time(self):
         self.progressBar_2.setValue(self.work_time/self.goal_time * 100)
@@ -106,10 +104,3 @@ class Dashboard(QMainWindow):
         self.break_mode = True
         self.display()
 
-    @pyqtSlot()
-    def In_clicked(self):
-        print('not implemented')
-
-    @pyqtSlot()
-    def Out_clicked(self):
-        print('not implemented')
