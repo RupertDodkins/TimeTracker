@@ -1,1 +1,1 @@
-TimeTracker is a python package used to track and report my working hours. In other words massive procrastination
+TimeTracker is a python package used to track and report my working hours. In other words a massive exercise in procrastination
