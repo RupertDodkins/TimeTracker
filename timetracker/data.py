@@ -21,6 +21,6 @@ class Data():
         self.daily_errand_scores = np.zeros_like((self.daily_errand_amounts))
 
         self.weekly_errand_score = 0
-        self.weekly_errands = np.array(['Gym', 'Gymnastics', 'Read paper', 'Get nice plot', 'Meal prep'])
-        self.weekly_errand_amounts = np.array([1,3,1,1,1])
+        self.weekly_errands = np.array(['Gym', 'Gymnastics', 'Read paper', 'Get nice plot', 'Meal prep', 'Laundry'])
+        self.weekly_errand_amounts = np.array([1,3.,1,1,1,4.])
         self.weekly_errand_scores = np.zeros_like((self.weekly_errand_amounts))

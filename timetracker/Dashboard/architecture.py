@@ -70,7 +70,7 @@ class Dashboard(QMainWindow):
 
         self.comboBox_2.addItems(errand for errand in self.data.weekly_errands)
         self.comboBox_2.setGeometry(390, 125, 200, 31)
-        self.comboBox_2.activated[str].connect(self.check_errand)
+        self.comboBox_2.activated[str].connect(self.check_weekly_errand)
         for i in range(len(self.data.weekly_errands)):
             getattr(self, f"week_errands_label_{i}").setText(str(self.data.weekly_errands[i]))
             row = i //3
@@ -108,6 +108,11 @@ class Dashboard(QMainWindow):
         self.prog_errand(errand_ind)
         self.progressBar_3.setValue(self.data.daily_errand_score)
 
+    def check_weekly_errand(self, text):
+        errand_ind = np.where(text == self.data.weekly_errands)[0][0]
+        self.prog_weekly_errand(errand_ind)
+        self.progressBar_4.setValue(self.data.weekly_errand_score)
+
     def prog_errand(self, errand_ind):
         progressbar = getattr(self, f"errand_pb_{errand_ind}")
 
@@ -122,6 +127,21 @@ class Dashboard(QMainWindow):
             self.data.daily_errand_score += 100./(len(self.data.daily_errands)*errand_amount)
             self.data.daily_errand_scores[errand_ind] += 100. / errand_amount
             progressbar.setValue(self.data.daily_errand_scores[errand_ind])
+
+    def prog_weekly_errand(self, errand_ind):
+        progressbar = getattr(self, f"week_errand_pb_{errand_ind}")
+
+        errand_amount = self.data.weekly_errand_amounts[errand_ind]
+        errand_complete_yet = self.data.weekly_errand_scores[errand_ind] == 100#errand_amount
+
+        if errand_complete_yet:
+            self.data.weekly_errand_score -= 100./len(self.data.weekly_errands)
+            self.data.weekly_errand_scores[errand_ind] =0#-= 100. / errand_amount
+            progressbar.setValue(self.data.weekly_errand_scores[errand_ind])
+        else:
+            self.data.weekly_errand_score += 100./(len(self.data.weekly_errands)*errand_amount)
+            self.data.weekly_errand_scores[errand_ind] += 100. / errand_amount
+            progressbar.setValue(self.data.weekly_errand_scores[errand_ind])
 
     def clickBox(self, state):
         if state == QtCore.Qt.Checked:
