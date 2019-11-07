@@ -14,10 +14,13 @@ class Data():
         self.todos = np.array([]*3)
         self.todos_complete = np.array([False,False,False])
 
-        self.errand_score = 0
-        self.errands = np.array(['Drink 3 bottles', 'Read paper', 'Get result for Ben', 'Meditate', 'NN',
-                                 'Update YNAB', 'Tidy room', 'Floss', 'Email to zero'])
-        self.errand_amounts = np.array([3., 1, 1, 1, 1, 1, 1, 2, 1])
-        self.errand_scores = np.zeros_like((self.errand_amounts))
+        self.daily_errand_score = 0
+        self.daily_errands = np.array(['Drink 3 bottles', 'Meditate', 'Tidy desk', 'Tidy room',
+                              'NN', 'Update YNAB', 'Floss', 'Email to zero'])
+        self.daily_errand_amounts = np.array([3.,1,1,1,1,1,2,1])
+        self.daily_errand_scores = np.zeros_like((self.daily_errand_amounts))
 
-
+        self.weekly_errand_score = 0
+        self.weekly_errands = np.array(['Gym', 'Gymnastics', 'Read paper', 'Get nice plot', 'Meal prep'])
+        self.weekly_errand_amounts = np.array([1,3,1,1,1])
+        self.weekly_errand_scores = np.zeros_like((self.weekly_errand_amounts))

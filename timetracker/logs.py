@@ -28,18 +28,11 @@ class Logger():
         else:
             return False
 
-    # def load_today(self, ui, settings):
-    #     """ Load the Dashboard instance """
-    #     GuiRestore(ui, settings)
-    #     # with open(self.config['gui_cache_address'], 'rb') as handle:
-    #     #     data = pickle.load(handle)
-    #     # return data
-    #
-    # def save_today(self, ui, settings):
-    #     """ Save the Dashboard instance """
-    #     GuiSave(ui, settings)
-    #     # with open(self.config['gui_cache_address'], 'wb') as handle:
-    #     #     pickle.dump(settings, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    def data_save(self):
+        raise NotImplementedError
+
+    def data_load(self):
+        raise NotImplementedError
 
     def GetHandledTypes(self):
         return (QComboBox, QLineEdit, QCheckBox, QRadioButton, QSpinBox, QSlider, QListWidget)
@@ -47,7 +40,7 @@ class Logger():
     def IsHandledType(self, widget):
         return any(isinstance(widget, t) for t in self.GetHandledTypes())
 
-    def GuiSave(self, ui : QWidget, settings : QSettings, uiName="uiwidget"):
+    def gui_save(self, ui : QWidget, settings : QSettings, uiName="uiwidget"):
         """
         save "ui" controls and values to registry "setting"
 
@@ -95,7 +88,7 @@ class Logger():
                 settings.setValue(namePrefix + name, value)
 
 
-    def GuiRestore(self, ui : QWidget, settings : QSettings, uiName="uiwidget"):
+    def gui_restore(self, ui : QWidget, settings : QSettings, uiName="uiwidget"):
         """
         restore "ui" controls with values stored in registry "settings"
 

@@ -1,1 +1,2 @@
-gui_cache_address: "/Users/dodkins/<DATE>_gui.pkl"
+gui_cache_address: "/Users/dodkins/timetracker_data/<DATE>_settings.ini"
+logs: "/Users/dodkins/timetracker_data/logs.pkl"

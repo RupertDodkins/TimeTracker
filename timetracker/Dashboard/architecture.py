@@ -20,13 +20,13 @@ class Dashboard(QMainWindow):
 
         self.logger = Logger()
 
-        GUI_cache_exists = self.logger.check_today()
-        print(GUI_cache_exists)
-        if GUI_cache_exists:
-            self.data = self.load()
-        else:
-            self.data = Data()
-        print(self.data.errand_score, self.data.errand_scores, self.data.todos)
+        # GUI_cache_exists = self.logger.check_today()
+        # print(GUI_cache_exists)
+        # if GUI_cache_exists:
+        #     self.data = self.load()
+        # else:
+        self.data = Data()
+        print(self.data.daily_errand_score, self.data.daily_errand_scores, self.data.todos)
 
         self.settings = QSettings('settings.ini', QSettings.IniFormat)
         self.settings.setFallbacksEnabled(False)    # File only, no fallback to registry or or.
@@ -55,43 +55,46 @@ class Dashboard(QMainWindow):
         for checkboxes in [self.checkBox_1, self.checkBox_2, self.checkBox_3]:
             checkboxes.stateChanged.connect(self.clickBox)
 
-        self.comboBox.addItems(errand for errand in self.data.errands)
+        self.comboBox.addItems(errand for errand in self.data.daily_errands)
+        # num_errands = len(self.data.daily_errands)
+        # num_rows = num_errands//3
+        # comboBox_row = num_rows if num_errands % 3 != 0 else num_rows+1
+        self.comboBox.setGeometry(390, 125, 200, 31)
         self.comboBox.activated[str].connect(self.check_errand)
+        for i in range(len(self.data.daily_errands)):
+            getattr(self, f"errands_label_{i}").setText(str(self.data.daily_errands[i]))
+            row = i //3
+            col = i % 3
+            getattr(self, f"errands_label_{i}").setGeometry(col*200 + 10, row*30 + 30,90,16)
+            getattr(self, f"errand_pb_{i}").setGeometry(col*200 + 110, row*30 + 30,71,20)
+
+        self.comboBox_2.addItems(errand for errand in self.data.weekly_errands)
+        self.comboBox_2.setGeometry(390, 125, 200, 31)
+        self.comboBox_2.activated[str].connect(self.check_errand)
+        for i in range(len(self.data.weekly_errands)):
+            getattr(self, f"week_errands_label_{i}").setText(str(self.data.weekly_errands[i]))
+            row = i //3
+            col = i % 3
+            getattr(self, f"week_errands_label_{i}").setGeometry(col*200 + 10, row*30 + 30,90,16)
+            getattr(self, f"week_errand_pb_{i}").setGeometry(col*200 + 110, row*30 + 30,71,20)
 
         self.actionSave_2.triggered.connect(self.save)
         self.actionLoad_2.triggered.connect(self.load)
         self.actionClose.triggered.connect(self.close)
 
-        # self.progressBar_3.setValue(int(self.settings.value('prog3', 50)))
-        self.logger.GuiRestore(self.ui, self.settings)
+        self.logger.gui_restore(self.ui, self.settings)
+
 
     def closeEvent(self, event):
-        self.logger.GuiSave(self.ui, self.settings)
+        self.logger.gui_save(self.ui, self.settings)
+        self.logger.data_save(self.ui, self.settings)
         event.accept()
 
-        # messagebox = QMessageBox(QMessageBox.Question, "Title text", "Do you want to save?", buttons = QMessageBox.Discard | QMessageBox.Cancel | QMessageBox.Ok, parent=self)
-        # messagebox.setDefaultButton(QMessageBox.Ok)
-        # reply = messagebox.exec_()
-        # if reply == QMessageBox.Ok:
-        #     self.save()
-        #     event.accept()
-        # elif reply == QMessageBox.Discard:
-        #     event.accept()
-        # else:
-        #     event.ignore()
-
     def save(self):
-        # self.logger.save_today(self.data)
-        # settings = QtCore.QSettings('my_org', 'my_app')
-        # self.logger.save_today(self.ui, settings)
-        print('sol')
+        self.logger.gui_save(self.ui, self.settings)
 
     def load(self):
-        print('lol')
-        # self.data = self.logger.load_today()
-        # self.label_8.setText(str(self.data.pomodoros))
-        # settings = QtCore.QSettings('my_org', 'my_app')
-        # self.logger.load_today(self.ui, settings)
+        self.logger.data_load(self.ui, self.settings)
 
     def update_pomodoros(self):
         self.data.pomodoros += 1
@@ -101,24 +104,24 @@ class Dashboard(QMainWindow):
         self.data.goal_time = self.spinBox.value() * 25 * 60
 
     def check_errand(self, text):
-        errand_ind = np.where(text == self.data.errands)[0][0]
+        errand_ind = np.where(text == self.data.daily_errands)[0][0]
         self.prog_errand(errand_ind)
-        self.progressBar_3.setValue(self.data.errand_score)
+        self.progressBar_3.setValue(self.data.daily_errand_score)
 
     def prog_errand(self, errand_ind):
-        progressbar = getattr(self, f"errand_progressBar_{errand_ind}")
+        progressbar = getattr(self, f"errand_pb_{errand_ind}")
 
-        errand_amount = self.data.errand_amounts[errand_ind]
-        errand_complete_yet = self.data.errand_scores[errand_ind] == 100#errand_amount
+        errand_amount = self.data.daily_errand_amounts[errand_ind]
+        errand_complete_yet = self.data.daily_errand_scores[errand_ind] == 100#errand_amount
 
         if errand_complete_yet:
-            self.data.errand_score -= 100./len(self.data.errands)
-            self.data.errand_scores[errand_ind] =0#-= 100. / errand_amount
-            progressbar.setValue(self.data.errand_scores[errand_ind])
+            self.data.daily_errand_score -= 100./len(self.data.daily_errands)
+            self.data.daily_errand_scores[errand_ind] =0#-= 100. / errand_amount
+            progressbar.setValue(self.data.daily_errand_scores[errand_ind])
         else:
-            self.data.errand_score += 100./(len(self.data.errands)*errand_amount)
-            self.data.errand_scores[errand_ind] += 100. / errand_amount
-            progressbar.setValue(self.data.errand_scores[errand_ind])
+            self.data.daily_errand_score += 100./(len(self.data.daily_errands)*errand_amount)
+            self.data.daily_errand_scores[errand_ind] += 100. / errand_amount
+            progressbar.setValue(self.data.daily_errand_scores[errand_ind])
 
     def clickBox(self, state):
         if state == QtCore.Qt.Checked:
