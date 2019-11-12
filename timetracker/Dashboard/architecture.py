@@ -27,10 +27,9 @@ class Dashboard(QMainWindow):
 
         # First get the report type data
         data_exists = self.logger.check_data()
+        self.data = Data()  # use the defaults
         if data_exists:
-            self.data = self.logger.data_load()  # load saved values
-        else:
-            self.data = Data()  # use the defaults
+            self.data = self.logger.data_load(self.data)  # load saved values
 
         pprint.pprint(self.data.__dict__)
 
@@ -97,9 +96,9 @@ class Dashboard(QMainWindow):
             textEdit.textChanged.connect(self.on_text_changed)
 
     def on_text_changed(self):
-        self.data.todos = [[self.textEdit.toPlainText()],
-                           [self.textEdit_2.toPlainText()],
-                           [self.textEdit_3.toPlainText()]]
+        self.data.todos = [[self.textEdit.toPlainText(), 'lol'],
+                           [self.textEdit_2.toPlainText(), 'lol'],
+                           [self.textEdit_3.toPlainText(), 'lol']]
 
     def closeEvent(self, event):
         self.logger.gui_save(self.ui, self.settings)

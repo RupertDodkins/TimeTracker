@@ -2,6 +2,7 @@
 
 import os
 import pickle
+import numpy as np
 import h5py
 import yaml
 from PyQt5.QtWidgets import *
@@ -11,6 +12,7 @@ import inspect
 class Logger():
     def __init__(self):
         self.load_config()
+        self.day = '20191205'
         print(self.config)
 
     def load_config(self):
@@ -28,18 +30,41 @@ class Logger():
     def check_gui(self):
         return os.path.exists(self.config['gui_cache_address'])
 
-    def data_load(self):
-        with open(self.config['logs'], 'rb') as handle:
-            data = pickle.load(handle)
+    def data_load(self, data):
+        with h5py.File(self.config['logs'], 'r') as hf:
+            day = hf.get(self.day)
+            for key, value in data.__dict__.items() :
+                setattr(data,key,day.get(key).value)
+            print(data)
         return data
 
     def data_save(self, data):
-        # with h5py.File(self.config['logs'], mode='a') as hdf:
-        #     # h5File = h5py.File('xxx.h5', 'w')
-        #     strList = ['asas', 'asas', 'asas']
-        #     hdf.create_dataset('xxx', (len(strList), 1), 'S10', strList)
-        with open(self.config['logs'], 'wb') as handle:
-            pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        if os.path.exists(self.config['logs']):
+            with h5py.File(self.config['logs'], mode='r') as hf:
+                keys = list(hf.keys())
+            mode = 'w' if self.day in keys else 'a'
+        else:
+            mode = 'w'
+
+        with h5py.File(self.config['logs'], mode=mode) as hf:
+            day = hf.create_group(self.day)
+            for key, value in data.__dict__.items():
+                if self.categorize_strings(value):
+                    day.create_dataset(key, data=np.string_(value))
+                else:
+                    day.create_dataset(key, data = value, dtype='f')
+
+    def categorize_strings(self, x):
+        """Check if string or a list containing strings"""
+        if isinstance(x, str):
+            return True
+        try:
+            isinstance(x[0], str)
+            isinstance(x[0][0], str)
+            return True
+        except (TypeError, IndexError):
+            pass
+        return False
 
     def GetHandledTypes(self):
         return (QComboBox, QLineEdit, QTextEdit, QCheckBox, QRadioButton, QSpinBox, QSlider, QListWidget, QProgressBar)
