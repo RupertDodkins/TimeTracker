@@ -9,6 +9,7 @@ from PyQt5 import QtGui
 from PyQt5.QtCore import QSettings
 from timetracker.logs import Logger
 from timetracker.data import Data
+import pprint
 
 TICK_TIME = 2**6  #/100
 
@@ -20,17 +21,27 @@ class Dashboard(QMainWindow):
 
         self.logger = Logger()
 
-        # GUI_cache_exists = self.logger.check_today()
-        # print(GUI_cache_exists)
-        # if GUI_cache_exists:
-        #     self.data = self.load()
-        # else:
-        self.data = Data()
-        print(self.data.daily_errand_score, self.data.daily_errand_scores, self.data.todos)
+        self.settings = QSettings(self.logger.config['gui_cache_address'], QSettings.IniFormat)
+        # self.settings = QSettings('settings.ini', QSettings.IniFormat)
+        self.settings.setFallbacksEnabled(False)    # File only, no fallback to registry or.
 
-        self.settings = QSettings('settings.ini', QSettings.IniFormat)
-        self.settings.setFallbacksEnabled(False)    # File only, no fallback to registry or or.
+        # First get the report type data
+        data_exists = self.logger.check_data()
+        if data_exists:
+            self.data = self.logger.data_load()  # load saved values
+        else:
+            self.data = Data()  # use the defaults
 
+        pprint.pprint(self.data.__dict__)
+
+        self.make_gui()
+
+        # if gui cache exists it will be loaded and overwrite the defaults
+        self.logger.gui_restore(self.ui, self.settings)
+
+        # self.data = self.logger.update_data(self.ui)
+
+    def make_gui(self):
         title = 'Dashboard'
         left = 200
         top = 100
@@ -82,19 +93,24 @@ class Dashboard(QMainWindow):
         self.actionLoad_2.triggered.connect(self.load)
         self.actionClose.triggered.connect(self.close)
 
-        self.logger.gui_restore(self.ui, self.settings)
+        for i, textEdit in enumerate([self.textEdit, self.textEdit_2, self.textEdit_3]):
+            textEdit.textChanged.connect(self.on_text_changed)
 
+    def on_text_changed(self):
+        self.data.todos = [[self.textEdit.toPlainText()],
+                           [self.textEdit_2.toPlainText()],
+                           [self.textEdit_3.toPlainText()]]
 
     def closeEvent(self, event):
         self.logger.gui_save(self.ui, self.settings)
-        self.logger.data_save(self.ui, self.settings)
+        self.logger.data_save(self.data)
         event.accept()
 
     def save(self):
         self.logger.gui_save(self.ui, self.settings)
 
     def load(self):
-        self.logger.data_load(self.ui, self.settings)
+        self.logger.data_load()
 
     def update_pomodoros(self):
         self.data.pomodoros += 1
@@ -127,6 +143,8 @@ class Dashboard(QMainWindow):
             self.data.daily_errand_score += 100./(len(self.data.daily_errands)*errand_amount)
             self.data.daily_errand_scores[errand_ind] += 100. / errand_amount
             progressbar.setValue(self.data.daily_errand_scores[errand_ind])
+
+        # print(self.errand_pb_1.value())
 
     def prog_weekly_errand(self, errand_ind):
         progressbar = getattr(self, f"week_errand_pb_{errand_ind}")

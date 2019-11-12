@@ -2,7 +2,7 @@
 import numpy as np
 
 class Data():
-    """ A class to store the data for a certain day """
+    """ A class to store the data relevant for reports """
 
     def __init__(self):
         self.work_time = 0.

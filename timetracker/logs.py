@@ -2,6 +2,7 @@
 
 import os
 import pickle
+import h5py
 import yaml
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import QSettings
@@ -21,21 +22,27 @@ class Logger():
         self.config['gui_cache_address'] = self.config['gui_cache_address'].replace('<DATE>','20191205')
         print(self.config['gui_cache_address'])
 
-    def check_today(self):
-        """ Check if cache for today's GUI exists """
-        if os.path.exists(self.config['gui_cache_address']):
-            return True
-        else:
-            return False
+    def check_data(self):
+        return os.path.exists(self.config['logs'])
 
-    def data_save(self):
-        raise NotImplementedError
+    def check_gui(self):
+        return os.path.exists(self.config['gui_cache_address'])
 
     def data_load(self):
-        raise NotImplementedError
+        with open(self.config['logs'], 'rb') as handle:
+            data = pickle.load(handle)
+        return data
+
+    def data_save(self, data):
+        # with h5py.File(self.config['logs'], mode='a') as hdf:
+        #     # h5File = h5py.File('xxx.h5', 'w')
+        #     strList = ['asas', 'asas', 'asas']
+        #     hdf.create_dataset('xxx', (len(strList), 1), 'S10', strList)
+        with open(self.config['logs'], 'wb') as handle:
+            pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     def GetHandledTypes(self):
-        return (QComboBox, QLineEdit, QCheckBox, QRadioButton, QSpinBox, QSlider, QListWidget)
+        return (QComboBox, QLineEdit, QTextEdit, QCheckBox, QRadioButton, QSpinBox, QSlider, QListWidget, QProgressBar)
 
     def IsHandledType(self, widget):
         return any(isinstance(widget, t) for t in self.GetHandledTypes())
@@ -66,6 +73,9 @@ class Logger():
             if isinstance(obj, QLineEdit):
                 value = obj.text()
 
+            if isinstance(obj, QTextEdit):
+                value = obj.toPlainText()
+
             if isinstance(obj, QCheckBox):
                 value = obj.isChecked()
 
@@ -76,6 +86,9 @@ class Logger():
                 value = obj.value()
 
             if isinstance(obj, QSlider):
+                value = obj.value()
+
+            if isinstance(obj, QProgressBar):
                 value = obj.value()
 
             if isinstance(obj, QListWidget):
@@ -130,6 +143,9 @@ class Logger():
             if isinstance(obj, QLineEdit):
                 obj.setText(value)
 
+            if isinstance(obj, QTextEdit):
+                obj.setText(value)
+
             if isinstance(obj, QCheckBox):
                 obj.setChecked(strtobool(value))
 
@@ -140,6 +156,9 @@ class Logger():
                 obj.setValue(int(value))
 
             if isinstance(obj, QSpinBox):
+                obj.setValue(int(value))
+
+            if isinstance(obj, QProgressBar):
                 obj.setValue(int(value))
 
             if isinstance(obj, QListWidget):
