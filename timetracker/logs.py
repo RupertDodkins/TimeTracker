@@ -8,6 +8,7 @@ import yaml
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import QSettings
 import inspect
+from pprint import pprint
 
 class Logger():
     def __init__(self):
@@ -35,7 +36,9 @@ class Logger():
             day = hf.get(self.day)
             for key, value in data.__dict__.items() :
                 setattr(data,key,day.get(key).value)
-            print(data)
+            pprint(data.__dict__)
+            data.daily_errands = np.str_(data.daily_errands)
+            pprint(data.__dict__)
         return data
 
     def data_save(self, data):
@@ -49,22 +52,33 @@ class Logger():
         with h5py.File(self.config['logs'], mode=mode) as hf:
             day = hf.create_group(self.day)
             for key, value in data.__dict__.items():
-                if self.categorize_strings(value):
+                # saving lists of strings is tricky in h5py hence all the code below
+                str_list_type = self.categorize_string_lists(value)
+                if str_list_type is None:
+                    day.create_dataset(key, data=value, dtype='f')
+                elif str_list_type == 1:  #key == weekly and dailly errands
+                    asciiList = [n.encode("ascii", "ignore") for n in value]
+                    day.create_dataset(key, dtype='S20', data=asciiList)
+                elif str_list_type == 2:  #key == todos
                     day.create_dataset(key, data=np.string_(value))
                 else:
-                    day.create_dataset(key, data = value, dtype='f')
+                    print('This should be a single string. Not needed until now')
+                    raise NotImplementedError
 
-    def categorize_strings(self, x):
+
+    def categorize_string_lists(self, x):
         """Check if string or a list containing strings"""
         if isinstance(x, str):
-            return True
+            return 0
         try:
-            isinstance(x[0], str)
-            isinstance(x[0][0], str)
-            return True
+            if len(np.shape(x)) == 1:
+                if isinstance(x[0], str):
+                    return 1
+            elif len(np.shape(x)) == 2:
+                if isinstance(x[0][0], str):
+                    return 2
         except (TypeError, IndexError):
-            pass
-        return False
+            return None
 
     def GetHandledTypes(self):
         return (QComboBox, QLineEdit, QTextEdit, QCheckBox, QRadioButton, QSpinBox, QSlider, QListWidget, QProgressBar)

@@ -31,7 +31,7 @@ class Dashboard(QMainWindow):
         if data_exists:
             self.data = self.logger.data_load(self.data)  # load saved values
 
-        pprint.pprint(self.data.__dict__)
+        # pprint.pprint(self.data.__dict__)
 
         self.make_gui()
 
