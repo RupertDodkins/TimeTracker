@@ -37,7 +37,8 @@ class Logger():
             for key, value in data.__dict__.items() :
                 setattr(data,key,day.get(key).value)
             pprint(data.__dict__)
-            data.daily_errands = np.str_(data.daily_errands)
+            data.daily_errands = np.array([str(e)[2:-1] for e in data.daily_errands])
+            data.weekly_errands = np.array([str(e)[2:-1] for e in data.weekly_errands])
             pprint(data.__dict__)
         return data
 
@@ -55,7 +56,7 @@ class Logger():
                 # saving lists of strings is tricky in h5py hence all the code below
                 str_list_type = self.categorize_string_lists(value)
                 if str_list_type is None:
-                    day.create_dataset(key, data=value, dtype='f')
+                    day.create_dataset(key, data=value)
                 elif str_list_type == 1:  #key == weekly and dailly errands
                     asciiList = [n.encode("ascii", "ignore") for n in value]
                     day.create_dataset(key, dtype='S20', data=asciiList)

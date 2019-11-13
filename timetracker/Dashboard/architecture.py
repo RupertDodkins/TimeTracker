@@ -54,7 +54,7 @@ class Dashboard(QMainWindow):
         # self.move(self.settings.value('pos', QtCore.QPoint(50, 50)))
 
         self.break_mode = False
-        self.pomodoro_duration = 25 * 60  #3
+        self.pomodoro_duration = 3#25 * 60  #3
         self.break_duration = 5 * 60
         self.pause_time = self.pomodoro_duration
         self.reset.clicked.connect(self.do_reset)
@@ -72,20 +72,21 @@ class Dashboard(QMainWindow):
         for checkboxes in [self.checkBox_1, self.checkBox_2, self.checkBox_3]:
             checkboxes.stateChanged.connect(self.clickBox)
 
-        self.comboBox.addItems(errand for errand in self.data.daily_errands)
+        self.comboBox.addItems(str(errand) for errand in self.data.daily_errands)
         # num_errands = len(self.data.daily_errands)
         # num_rows = num_errands//3
         # comboBox_row = num_rows if num_errands % 3 != 0 else num_rows+1
         self.comboBox.setGeometry(390, 125, 200, 31)
         self.comboBox.activated[str].connect(self.check_errand)
         for i in range(len(self.data.daily_errands)):
+            print(self.data.daily_errands[i])
             getattr(self, f"errands_label_{i}").setText(str(self.data.daily_errands[i]))
             row = i //3
             col = i % 3
             getattr(self, f"errands_label_{i}").setGeometry(col*200 + 10, row*30 + 30,90,16)
             getattr(self, f"errand_pb_{i}").setGeometry(col*200 + 110, row*30 + 30,71,20)
 
-        self.comboBox_2.addItems(errand for errand in self.data.weekly_errands)
+        self.comboBox_2.addItems(str(errand) for errand in self.data.weekly_errands)
         self.comboBox_2.setGeometry(390, 125, 200, 31)
         self.comboBox_2.activated[str].connect(self.check_weekly_errand)
         for i in range(len(self.data.weekly_errands)):
