@@ -1,6 +1,8 @@
 """GUI functionality"""
 
+import os
 import numpy as np
+from datetime import datetime
 from PyQt5.QtCore import pyqtSlot, QTimer
 from PyQt5 import Qt, QtCore
 from PyQt5.QtWidgets import QMainWindow, QMessageBox
@@ -17,7 +19,7 @@ class Dashboard(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.ui = loadUi("Dashboard/gui.ui", self)
+        self.ui = loadUi(os.path.dirname(os.path.realpath(__file__))+"/gui.ui", self)
 
         self.logger = Logger()
 
@@ -52,11 +54,16 @@ class Dashboard(QMainWindow):
         # self.move(self.settings.value('pos', QtCore.QPoint(50, 50)))
 
         self.break_mode = False
+        self.pomodoro_duration = 25 * 60  #3
+        self.break_duration = 5 * 60
+        self.pause_time = self.pomodoro_duration
         self.reset.clicked.connect(self.do_reset)
         self.start.clicked.connect(self.do_start)
         self.break_2.clicked.connect(self.do_break)
         self.timer = QTimer()
+        # self.timer.setInterval(1000)
         self.timer.setInterval(TICK_TIME)
+        self.timer.setTimerType(QtCore.Qt.PreciseTimer)
         self.timer.timeout.connect(self.tick)
         self.do_reset()
 
@@ -189,19 +196,33 @@ class Dashboard(QMainWindow):
     def display(self):
         if self.time < 0:
             self.lcd.setDigitCount(6)
+            self.lcd.display("-%d:%.2d" % (abs(self.time) // 60, abs(self.time) % 60))
         else:
             self.lcd.setDigitCount(5)
-        # self.lcd.display("%d:%.2f" % (self.time // 60, self.time % 60))
-        self.lcd.display("%d:%.2d" % (self.time // 60, self.time % 60))
+            # self.lcd.display("%d:%.2f" % (self.time // 60, self.time % 60))
+            self.lcd.display("%d:%.2d" % (self.time // 60, self.time % 60))
 
 
     @Qt.pyqtSlot()
     def tick(self):
-
-        if self.time > 0 and self.time - TICK_TIME / 1000 <0:
+        print(self.time, TICK_TIME/1000, self.time - TICK_TIME / 1000, self.time > 0, self.time - TICK_TIME / 1000 <0, self.time > 0 and self.time - TICK_TIME / 1000 <0)
+        if self.time >= 0 and self.time - TICK_TIME / 1000 <0:
             self.update_pomodoros()
 
         self.time -= TICK_TIME / 1000
+
+        delta = datetime.now() - self.timestamp_start
+        delta = delta.total_seconds()
+        print(self.time, self.pomodoro_duration-delta)
+        if self.break_mode:
+            if np.int(self.time) != self.break_duration - np.int(delta):
+                print('Using delta', delta)
+                self.time = self.pause_time - np.int(delta)
+        else:
+            if np.int(self.time) != self.pomodoro_duration - np.int(delta):
+                print('Using delta', delta)
+                self.time = self.pause_time - np.int(delta)
+
         self.display()
 
         if not self.break_mode:
@@ -211,6 +232,7 @@ class Dashboard(QMainWindow):
 
     @Qt.pyqtSlot()
     def do_start(self):
+        self.timestamp_start = datetime.now()
         self.timer.start()
         self.start.setText("Pause")
         self.start.clicked.disconnect()
@@ -218,6 +240,7 @@ class Dashboard(QMainWindow):
 
     @Qt.pyqtSlot()
     def do_pause(self):
+        self.pause_time = self.time
         self.timer.stop()
         self.start.setText("Start")
         self.start.clicked.disconnect()
@@ -225,13 +248,17 @@ class Dashboard(QMainWindow):
 
     @Qt.pyqtSlot()
     def do_reset(self):
-        self.time = 25*60
+        self.timestamp_start = datetime.now()
+        self.time = self.pomodoro_duration
+        self.pause_time = self.pomodoro_duration
         self.break_mode = False
         self.display()
 
     @Qt.pyqtSlot()
     def do_break(self):
-        self.time = 5*60
+        self.timestamp_start = datetime.now()
+        self.time = self.break_duration
+        self.pause_time = self.break_duration
         self.break_mode = True
         self.display()
 

@@ -1,3 +1,5 @@
+#!/Users/dodkins/PythonProjects/TimeTracker/venv/bin/python
+
 import sys
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QFile, QTextStream

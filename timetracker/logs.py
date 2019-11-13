@@ -17,7 +17,7 @@ class Logger():
         print(self.config)
 
     def load_config(self):
-        with open("config.yml", 'r') as stream:
+        with open(os.path.dirname(os.path.realpath(__file__))+"/config.yml", 'r') as stream:
             try:
                 self.config = yaml.safe_load(stream)
             except yaml.YAMLError as exc:
