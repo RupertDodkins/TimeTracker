@@ -54,7 +54,7 @@ class Dashboard(QMainWindow):
         # self.move(self.settings.value('pos', QtCore.QPoint(50, 50)))
 
         self.break_mode = False
-        self.pomodoro_duration = 3#25 * 60  #3
+        self.pomodoro_duration = 25 * 60  #3
         self.break_duration = 5 * 60
         self.pause_time = self.pomodoro_duration
         self.reset.clicked.connect(self.do_reset)
@@ -206,8 +206,8 @@ class Dashboard(QMainWindow):
     @Qt.pyqtSlot()
     def tick(self):
         print(self.time, TICK_TIME/1000, self.time - TICK_TIME / 1000, self.time > 0, self.time - TICK_TIME / 1000 <0, self.time > 0 and self.time - TICK_TIME / 1000 <0)
-        if self.time >= 0 and self.time - TICK_TIME / 1000 <0:
-            self.update_pomodoros()
+
+        orig_time = self.time
 
         self.time -= TICK_TIME / 1000
 
@@ -222,11 +222,15 @@ class Dashboard(QMainWindow):
             self.data.work_time += TICK_TIME / 1000
             self.prog_time()
             self.disp_time()
+
             if np.int(self.time) != self.pomodoro_duration - np.int(delta):
                 difference = self.time - (self.pause_time - np.int(delta))
                 print('Using delta', delta, difference)
                 self.data.work_time += difference
                 self.time = self.pause_time - np.int(delta)
+
+            if orig_time >= 0 and self.time < 0:
+                self.update_pomodoros()
 
         self.display()
 
