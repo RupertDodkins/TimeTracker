@@ -8,13 +8,13 @@ import yaml
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import QSettings
 import inspect
+from datetime import datetime
 from pprint import pprint
 
 class Logger():
     def __init__(self):
+        self.day = f'{datetime.now().year}{datetime.now().month}{datetime.now().day}' #'20191205'
         self.load_config()
-        self.day = '20191205'
-        print(self.config)
 
     def load_config(self):
         with open(os.path.dirname(os.path.realpath(__file__))+"/config.yml", 'r') as stream:
@@ -22,19 +22,28 @@ class Logger():
                 self.config = yaml.safe_load(stream)
             except yaml.YAMLError as exc:
                 self.config = exc
-        self.config['gui_cache_address'] = self.config['gui_cache_address'].replace('<DATE>','20191205')
-        # print(self.config['gui_cache_address'])
+        self.config['gui_cache_address'] = self.config['gui_cache_address'].replace('<DATE>',self.day)
 
     def check_data(self):
-        return os.path.exists(self.config['logs'])
+        result = False
+        if os.path.exists(self.config['data_logs']):
+            with h5py.File(self.config['data_logs'], 'r') as hf:
+                keys = list(hf.keys())
+                print(keys)
+                if self.day in keys:
+                    result = True
+        print(result)
+        return result
+
 
     def check_gui(self):
         return os.path.exists(self.config['gui_cache_address'])
 
     def data_load(self, data):
-        with h5py.File(self.config['logs'], 'r') as hf:
+        with h5py.File(self.config['data_logs'], 'r') as hf:
             day = hf.get(self.day)
-            for key, value in data.__dict__.items() :
+            for key, value in data.__dict__.items():
+                print(key, value)
                 setattr(data,key,day.get(key).value)
             # pprint(data.__dict__)
             data.daily_errands = np.array([str(e)[2:-1] for e in data.daily_errands])
@@ -43,14 +52,14 @@ class Logger():
         return data
 
     def data_save(self, data):
-        if os.path.exists(self.config['logs']):
-            with h5py.File(self.config['logs'], mode='r') as hf:
+        if os.path.exists(self.config['data_logs']):
+            with h5py.File(self.config['data_logs'], mode='r') as hf:
                 keys = list(hf.keys())
             mode = 'w' if self.day in keys else 'a'
         else:
             mode = 'w'
 
-        with h5py.File(self.config['logs'], mode=mode) as hf:
+        with h5py.File(self.config['data_logs'], mode=mode) as hf:
             day = hf.create_group(self.day)
             for key, value in data.__dict__.items():
                 # saving lists of strings is tricky in h5py hence all the code below

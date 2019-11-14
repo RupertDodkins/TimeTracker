@@ -199,8 +199,8 @@ class Dashboard(QMainWindow):
     def update_work_time_times(self):
         now = datetime.now()
         hour = now.hour+float(now.minute)/60.
-        self.data.work_time_hours.append(hour)
-        self.data.work_time_history.append(self.data.work_time)
+        self.data.work_time_hours = np.append(self.data.work_time_hours, hour)
+        self.data.work_time_history = np.append(self.data.work_time_history, self.data.work_time)
         self.reportsWidget.update_time_served()
 
     def keyPressEvent(self, event):
@@ -241,7 +241,7 @@ class Dashboard(QMainWindow):
             if orig_time >= 0 and self.time < 0:  # timer transitions below 0
                 self.update_pomodoros()
 
-            if orig_time//3 != self.time//3:  # timer transitions past minute mark
+            if orig_time//20 != self.time//20:  # timer transitions past minute mark
                 self.update_work_time_times()
 
         self.display()

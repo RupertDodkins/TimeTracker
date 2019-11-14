@@ -10,6 +10,7 @@ from matplotlib.image import AxesImage
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QWidget, QFormLayout
+from datetime import datetime
 
 class Reporter(QWidget):
     """ A class to display the historical data """
@@ -44,6 +45,7 @@ class Reporter(QWidget):
 
         # self.time = time.time()
         self.day_hours = np.arange(8, 23, 0.25)
+        self.actual_day_hours = np.arange(datetime.now().hour+float(datetime.now().minute)/60, 23, 0.25)
         self.ts_loc = [0,0]
 
     def initialize_time_served(self):

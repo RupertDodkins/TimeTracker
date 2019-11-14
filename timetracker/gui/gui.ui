@@ -1231,34 +1231,11 @@ logged</string>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tab_3">
      <attribute name="title">
       <string>Statistics</string>
-     </attribute>
-     <widget class="QGroupBox" name="groupBox_4">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>5</y>
-        <width>601</width>
-        <height>681</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>15</pointsize>
-       </font>
-      </property>
-      <property name="title">
-       <string>Frequency</string>
-      </property>
-     </widget>
-    </widget>
-    <widget class="QWidget" name="tab_5">
-     <attribute name="title">
-      <string>Logs</string>
      </attribute>
      <widget class="QGroupBox" name="groupBox_6">
       <property name="geometry">
@@ -1301,6 +1278,11 @@ logged</string>
        <layout class="QHBoxLayout" name="horizontalLayout_2"/>
       </widget>
      </widget>
+    </widget>
+    <widget class="QWidget" name="tab_5">
+     <attribute name="title">
+      <string>Logs</string>
+     </attribute>
     </widget>
    </widget>
   </widget>
