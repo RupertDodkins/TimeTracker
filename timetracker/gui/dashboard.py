@@ -120,6 +120,9 @@ class Dashboard(QMainWindow):
         self.reports = Reporter(self)
         self.horizontalLayout_2.addWidget(self.reports)
         self.reports.initialize_time_served()
+        self.reports.update_time_served()
+        self.reports.initialize_time_hist()
+        self.reports.update_time_hist()
 
     def on_text_changed(self):
         self.data.todos = [[self.textEdit.toPlainText(), 'lol'],
@@ -133,6 +136,7 @@ class Dashboard(QMainWindow):
 
     def save(self):
         self.logger.gui_save(self.ui, self.settings)
+        self.logger.data_save(self.data)
 
     def load(self):
         self.logger.data_load()
@@ -213,6 +217,7 @@ class Dashboard(QMainWindow):
         self.data.work_time_hours = np.append(self.data.work_time_hours, hour)
         self.data.work_time_history = np.append(self.data.work_time_history, self.data.work_time)
         self.reports.update_time_served()
+        self.reports.update_time_hist()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Qt.Key_Escape:
@@ -252,7 +257,7 @@ class Dashboard(QMainWindow):
             if orig_time >= 0 and self.time < 0:  # timer transitions below 0
                 self.update_pomodoros()
 
-            if orig_time//20 != self.time//20:  # timer transitions past minute mark
+            if orig_time//30 != self.time//30:  # timer transitions past minute mark
                 self.update_work_time_times()
 
         self.display()

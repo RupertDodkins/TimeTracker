@@ -44,9 +44,10 @@ class Reporter(QWidget):
         self.ims = np.empty((self.nrows, self.ncols), dtype=AxesImage)
 
         # self.time = time.time()
-        self.day_hours = np.arange(8, 23, 0.25)
+        self.day_hours = np.arange(9, 17, 0.25)
         self.actual_day_hours = np.arange(datetime.now().hour+float(datetime.now().minute)/60, 23, 0.25)
         self.ts_loc = [0,0]
+        self.ts_hist_loc = [1,0]
 
     def initialize_time_served(self):
         goal_hours = np.linspace(0,self.data.goal_time/60,len(self.day_hours))
@@ -61,7 +62,17 @@ class Reporter(QWidget):
         self.axes[self.ts_loc[0],self.ts_loc[1]].set_ylim(0,self.data.goal_time/60)
         self.ts_goalline = self.axes[self.ts_loc[0],self.ts_loc[1]].plot(self.day_hours, goal_hours, linestyle='--', color='k')
 
-    def update_time_served(self, x=0, y=0):
-        self.axes[self.ts_loc[0],self.ts_loc[1]].plot(self.data.work_time_hours, np.array(self.data.work_time_history)/60, color='b')
+    def update_time_served(self):
+        line = self.axes[self.ts_loc[0],self.ts_loc[1]].plot(self.data.work_time_hours, np.array(self.data.work_time_history)/60, color='b')
         self.canvas.draw()
+        # line.pop(0).remove()
         # plt.show(block=True)
+
+    def initialize_time_hist(self):
+        self.axes[self.ts_hist_loc[0],self.ts_hist_loc[1]].set_xlabel('clock time (hours)')
+        self.axes[self.ts_hist_loc[0],self.ts_hist_loc[1]].set_ylabel('amount')
+
+    def update_time_hist(self):
+        hist = self.ts_hist = self.axes[self.ts_hist_loc[0],self.ts_hist_loc[1]].hist(self.data.work_time_history/3600, bins=self.day_hours, color='b')
+        self.canvas.draw()
+        # hist.pop(0).remove()
