@@ -1,4 +1,4 @@
-""" This module hoasts the Data class used to store the user's scores and settings in Dashboard """
+""" This module hoasts the Data class used to store the user's scores and settings in gui """
 import numpy as np
 
 class Data():
@@ -9,6 +9,8 @@ class Data():
         self.pomodoros = 0
         self.goal_time = 8 * 25 * 60
         self.pomodoro_times = []
+        self.work_time_hours = []
+        self.work_time_history = []
 
         self.todo_score = 0
         self.todos = np.array([]*3)

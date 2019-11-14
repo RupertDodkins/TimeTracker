@@ -5,13 +5,14 @@ import numpy as np
 from datetime import datetime
 from PyQt5.QtCore import pyqtSlot, QTimer
 from PyQt5 import Qt, QtCore
-from PyQt5.QtWidgets import QMainWindow, QMessageBox
+from PyQt5.QtWidgets import QMainWindow
 from PyQt5.uic import loadUi
 from PyQt5 import QtGui
 from PyQt5.QtCore import QSettings
+import pprint
 from timetracker.logs import Logger
 from timetracker.data import Data
-import pprint
+from timetracker.gui.reports import Reporter
 
 TICK_TIME = 2**6  #/100
 
@@ -54,7 +55,7 @@ class Dashboard(QMainWindow):
         # self.move(self.settings.value('pos', QtCore.QPoint(50, 50)))
 
         self.break_mode = False
-        self.pomodoro_duration = 3#25 * 60  #3
+        self.pomodoro_duration = 25 * 60  #3
         self.break_duration = 5 * 60
         self.pause_time = self.pomodoro_duration
         self.reset.clicked.connect(self.do_reset)
@@ -79,7 +80,6 @@ class Dashboard(QMainWindow):
         self.comboBox.setGeometry(390, 125, 200, 31)
         self.comboBox.activated[str].connect(self.check_errand)
         for i in range(len(self.data.daily_errands)):
-            print(self.data.daily_errands[i])
             getattr(self, f"errands_label_{i}").setText(str(self.data.daily_errands[i]))
             row = i //3
             col = i % 3
@@ -103,6 +103,13 @@ class Dashboard(QMainWindow):
         for i, textEdit in enumerate([self.textEdit, self.textEdit_2, self.textEdit_3]):
             textEdit.textChanged.connect(self.on_text_changed)
 
+        self.label_8.setText(str(self.data.pomodoros))
+        self.disp_time()
+
+        self.reportsWidget = Reporter(self)
+        self.horizontalLayout_2.addWidget(self.reportsWidget)
+        self.reportsWidget.initialize_time_served()
+
     def on_text_changed(self):
         self.data.todos = [[self.textEdit.toPlainText(), 'lol'],
                            [self.textEdit_2.toPlainText(), 'lol'],
@@ -125,6 +132,7 @@ class Dashboard(QMainWindow):
 
     def update_goaltime(self):
         self.data.goal_time = self.spinBox.value() * 25 * 60
+        self.reportsWidget.update_goal_line(self.data.goal_time)
 
     def check_errand(self, text):
         errand_ind = np.where(text == self.data.daily_errands)[0][0]
@@ -188,6 +196,13 @@ class Dashboard(QMainWindow):
     def disp_time(self):
         self.label_4.setText('%d' % (self.data.work_time/60))
 
+    def update_work_time_times(self):
+        now = datetime.now()
+        hour = now.hour+float(now.minute)/60.
+        self.data.work_time_hours.append(hour)
+        self.data.work_time_history.append(self.data.work_time)
+        self.reportsWidget.update_time_served()
+
     def keyPressEvent(self, event):
         if event.key() == Qt.Qt.Key_Escape:
             self.close()
@@ -200,24 +215,18 @@ class Dashboard(QMainWindow):
             self.lcd.display("-%d:%.2d" % (abs(self.time) // 60, abs(self.time) % 60))
         else:
             self.lcd.setDigitCount(5)
-            # self.lcd.display("%d:%.2f" % (self.time // 60, self.time % 60))
             self.lcd.display("%d:%.2d" % (self.time // 60, self.time % 60))
-
 
     @Qt.pyqtSlot()
     def tick(self):
-        print(self.time, TICK_TIME/1000, self.time - TICK_TIME / 1000, self.time > 0, self.time - TICK_TIME / 1000 <0, self.time > 0 and self.time - TICK_TIME / 1000 <0)
-
         orig_time = self.time
 
         self.time -= TICK_TIME / 1000
 
         delta = datetime.now() - self.timestamp_start
         delta = delta.total_seconds()
-        print(self.time, self.pomodoro_duration-delta, self.data.work_time)
         if self.break_mode:
             if np.int(self.time) != self.break_duration - np.int(delta):
-                print('Using delta', delta)
                 self.time = self.pause_time - np.int(delta)
         else:
             self.data.work_time += TICK_TIME / 1000
@@ -226,12 +235,14 @@ class Dashboard(QMainWindow):
 
             if np.int(self.time) != self.pomodoro_duration - np.int(delta):
                 difference = self.time - (self.pause_time - np.int(delta))
-                print('Using delta', delta, difference)
                 self.data.work_time += difference
                 self.time = self.pause_time - np.int(delta)
 
-            if orig_time >= 0 and self.time < 0:
+            if orig_time >= 0 and self.time < 0:  # timer transitions below 0
                 self.update_pomodoros()
+
+            if orig_time//3 != self.time//3:  # timer transitions past minute mark
+                self.update_work_time_times()
 
         self.display()
 

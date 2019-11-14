@@ -4,8 +4,8 @@ import sys
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QFile, QTextStream
 from PyQt5.QtGui import QIcon, QPixmap
-import timetracker.Dashboard.breeze_resources
-from timetracker.Dashboard.architecture import Dashboard
+import timetracker.gui.breeze_resources
+from timetracker.gui.dashboard import Dashboard
 
 def run_dashboard():
     app = QtWidgets.QApplication(sys.argv)

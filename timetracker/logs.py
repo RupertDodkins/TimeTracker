@@ -1,4 +1,4 @@
-""" This module hoasts the Logger class used to store access the user's saved scores and settings in Dashboard """
+""" This module hoasts the Logger class used to store access the user's saved scores and settings in gui """
 
 import os
 import pickle
@@ -23,7 +23,7 @@ class Logger():
             except yaml.YAMLError as exc:
                 self.config = exc
         self.config['gui_cache_address'] = self.config['gui_cache_address'].replace('<DATE>','20191205')
-        print(self.config['gui_cache_address'])
+        # print(self.config['gui_cache_address'])
 
     def check_data(self):
         return os.path.exists(self.config['logs'])
@@ -36,10 +36,10 @@ class Logger():
             day = hf.get(self.day)
             for key, value in data.__dict__.items() :
                 setattr(data,key,day.get(key).value)
-            pprint(data.__dict__)
+            # pprint(data.__dict__)
             data.daily_errands = np.array([str(e)[2:-1] for e in data.daily_errands])
             data.weekly_errands = np.array([str(e)[2:-1] for e in data.weekly_errands])
-            pprint(data.__dict__)
+            # pprint(data.__dict__)
         return data
 
     def data_save(self, data):

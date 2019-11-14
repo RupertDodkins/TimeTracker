@@ -655,7 +655,7 @@
       <widget class="QPlainTextEdit" name="plainTextEdit_3">
        <property name="geometry">
         <rect>
-         <x>68</x>
+         <x>65</x>
          <y>217</y>
          <width>531</width>
          <height>26</height>
@@ -1260,6 +1260,47 @@ logged</string>
      <attribute name="title">
       <string>Logs</string>
      </attribute>
+     <widget class="QGroupBox" name="groupBox_6">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>5</y>
+        <width>601</width>
+        <height>716</height>
+       </rect>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>220</height>
+       </size>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>15</pointsize>
+       </font>
+      </property>
+      <property name="title">
+       <string>Reports</string>
+      </property>
+      <widget class="QWidget" name="layoutWidget_2">
+       <property name="geometry">
+        <rect>
+         <x>6</x>
+         <y>30</y>
+         <width>586</width>
+         <height>671</height>
+        </rect>
+       </property>
+       <layout class="QHBoxLayout" name="horizontalLayout_2"/>
+      </widget>
+     </widget>
     </widget>
    </widget>
   </widget>
