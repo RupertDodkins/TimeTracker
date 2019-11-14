@@ -18,8 +18,11 @@ class Data():
 
         self.daily_errand_score = 0
         self.daily_errands = np.array(['Drink 3 bottles', 'Meditate', 'Tidy desk', 'Tidy room',
-                              'NN', 'Update YNAB', 'Floss', 'Email to zero'])
-        self.daily_errand_amounts = np.array([3.,1,1,1,1,1,2,1])
+                              'NN', 'Update YNAB', 'Floss', 'Email to zero', 'In before 10am'])
+        self.daily_errand_amounts = np.ones(len(self.daily_errands))
+        self.daily_errand_amounts[self.daily_errands=='Drink 3 bottles']=3.#np.array([3.,1,1,1,1,1,2,1,1])
+        self.daily_errand_amounts[self.daily_errands=='Floss']=2
+        print(self.daily_errand_amounts)
         self.daily_errand_scores = np.zeros_like((self.daily_errand_amounts))
 
         self.weekly_errand_score = 0

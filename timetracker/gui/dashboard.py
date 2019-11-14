@@ -5,9 +5,9 @@ import numpy as np
 from datetime import datetime
 from PyQt5.QtCore import pyqtSlot, QTimer
 from PyQt5 import Qt, QtCore
-from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtWidgets import QMainWindow, QLabel, QProgressBar
 from PyQt5.uic import loadUi
-from PyQt5 import QtGui
+# from PyQt5 import QtGui
 from PyQt5.QtCore import QSettings
 import pprint
 from timetracker.logs import Logger
@@ -36,24 +36,32 @@ class Dashboard(QMainWindow):
 
         # pprint.pprint(self.data.__dict__)
 
-        self.make_gui()
+        self.initialize_gui()
 
         # if gui cache exists it will be loaded and overwrite the defaults
         self.logger.gui_restore(self.ui, self.settings)
 
         # self.data = self.logger.update_data(self.ui)
 
-    def make_gui(self):
+    def initialize_gui(self):
+        self.frame()
+        self.pomodoroWidget()
+        self.todoWidget()
+        self.errandsWidgets()
+        self.toolbarWidget()
+        self.reportsWidget()
+
+    def frame(self):
         title = 'Dashboard'
+        self.setWindowTitle(title)
+
         left = 200
         top = 100
         width = 1255
         height = 790
-        self.setWindowTitle(title)
         self.setGeometry(left, top, width, height)
-        # self.resize(self.settings.value('size', QtCore.QSize(270, 225)))
-        # self.move(self.settings.value('pos', QtCore.QPoint(50, 50)))
 
+    def pomodoroWidget(self):
         self.break_mode = False
         self.pomodoro_duration = 25 * 60  #3
         self.break_duration = 5 * 60
@@ -67,48 +75,51 @@ class Dashboard(QMainWindow):
         self.timer.setTimerType(QtCore.Qt.PreciseTimer)
         self.timer.timeout.connect(self.tick)
         self.do_reset()
-
         self.spinBox.valueChanged.connect(self.update_goaltime)
+        self.label_8.setText(str(self.data.pomodoros))
+        self.disp_time()
 
+    def todoWidget(self):
         for checkboxes in [self.checkBox_1, self.checkBox_2, self.checkBox_3]:
             checkboxes.stateChanged.connect(self.clickBox)
+        for textEdit in [self.textEdit, self.textEdit_2, self.textEdit_3]:
+            textEdit.textChanged.connect(self.on_text_changed)
 
-        self.comboBox.addItems(str(errand) for errand in self.data.daily_errands)
-        # num_errands = len(self.data.daily_errands)
-        # num_rows = num_errands//3
-        # comboBox_row = num_rows if num_errands % 3 != 0 else num_rows+1
-        self.comboBox.setGeometry(390, 125, 200, 31)
-        self.comboBox.activated[str].connect(self.check_errand)
-        for i in range(len(self.data.daily_errands)):
-            getattr(self, f"errands_label_{i}").setText(str(self.data.daily_errands[i]))
-            row = i //3
-            col = i % 3
-            getattr(self, f"errands_label_{i}").setGeometry(col*200 + 10, row*30 + 30,90,16)
-            getattr(self, f"errand_pb_{i}").setGeometry(col*200 + 110, row*30 + 30,71,20)
+    def errandsWidgets(self):
+        for scale in ['daily', 'weekly']:
+            comboBox = getattr(self, f'{scale}_comboBox')
+            errands = getattr(self.data, f'{scale}_errands')
+            errands_groupBox = getattr(self, f'{scale}_errands_groupBox')
+            comboBox.addItems(str(errand) for errand in errands)
+            # num_errands = len(self.data.daily_errands)
+            # num_rows = num_errands//3
+            # comboBox_row = num_rows if num_errands % 3 != 0 else num_rows+1
+            comboBox.setGeometry(390, 125, 200, 31)
+            comboBox.activated[str].connect(getattr(self, f'{scale}_check_errand'))
+            for i in range(len(errands)):
+                row = i //3
+                col = i % 3
 
-        self.comboBox_2.addItems(str(errand) for errand in self.data.weekly_errands)
-        self.comboBox_2.setGeometry(390, 125, 200, 31)
-        self.comboBox_2.activated[str].connect(self.check_weekly_errand)
-        for i in range(len(self.data.weekly_errands)):
-            getattr(self, f"week_errands_label_{i}").setText(str(self.data.weekly_errands[i]))
-            row = i //3
-            col = i % 3
-            getattr(self, f"week_errands_label_{i}").setGeometry(col*200 + 10, row*30 + 30,90,16)
-            getattr(self, f"week_errand_pb_{i}").setGeometry(col*200 + 110, row*30 + 30,71,20)
+                setattr(self, f'{scale}_errands_label_{i}', QLabel(errands_groupBox))
+                setattr(self, f'{scale}_errand_pb_{i}', QProgressBar(errands_groupBox))
 
+                errands_QLabel = getattr(self, f"{scale}_errands_label_{i}")
+                errands_QLabel.setText(str(errands[i]))
+                errands_QLabel.setGeometry(col*200 + 10, row*30 + 30,90,16)
+
+                errands_QProgressBar = getattr(self, f"{scale}_errand_pb_{i}")
+                errands_QProgressBar.setGeometry(col*200 + 110, row*30 + 30,71,20)
+                errands_QProgressBar.setValue(0)
+
+    def toolbarWidget(self):
         self.actionSave_2.triggered.connect(self.save)
         self.actionLoad_2.triggered.connect(self.load)
         self.actionClose.triggered.connect(self.close)
 
-        for i, textEdit in enumerate([self.textEdit, self.textEdit_2, self.textEdit_3]):
-            textEdit.textChanged.connect(self.on_text_changed)
-
-        self.label_8.setText(str(self.data.pomodoros))
-        self.disp_time()
-
-        self.reportsWidget = Reporter(self)
-        self.horizontalLayout_2.addWidget(self.reportsWidget)
-        self.reportsWidget.initialize_time_served()
+    def reportsWidget(self):
+        self.reports = Reporter(self)
+        self.horizontalLayout_2.addWidget(self.reports)
+        self.reports.initialize_time_served()
 
     def on_text_changed(self):
         self.data.todos = [[self.textEdit.toPlainText(), 'lol'],
@@ -132,20 +143,20 @@ class Dashboard(QMainWindow):
 
     def update_goaltime(self):
         self.data.goal_time = self.spinBox.value() * 25 * 60
-        self.reportsWidget.update_goal_line(self.data.goal_time)
+        self.reports.update_goal_line(self.data.goal_time)
 
-    def check_errand(self, text):
+    def daily_check_errand(self, text):
         errand_ind = np.where(text == self.data.daily_errands)[0][0]
         self.prog_errand(errand_ind)
         self.progressBar_3.setValue(self.data.daily_errand_score)
 
-    def check_weekly_errand(self, text):
+    def weekly_check_errand(self, text):
         errand_ind = np.where(text == self.data.weekly_errands)[0][0]
         self.prog_weekly_errand(errand_ind)
         self.progressBar_4.setValue(self.data.weekly_errand_score)
 
     def prog_errand(self, errand_ind):
-        progressbar = getattr(self, f"errand_pb_{errand_ind}")
+        progressbar = getattr(self, f"daily_errand_pb_{errand_ind}")
 
         errand_amount = self.data.daily_errand_amounts[errand_ind]
         errand_complete_yet = self.data.daily_errand_scores[errand_ind] == 100#errand_amount
@@ -162,7 +173,7 @@ class Dashboard(QMainWindow):
         # print(self.errand_pb_1.value())
 
     def prog_weekly_errand(self, errand_ind):
-        progressbar = getattr(self, f"week_errand_pb_{errand_ind}")
+        progressbar = getattr(self, f"weekly_errand_pb_{errand_ind}")
 
         errand_amount = self.data.weekly_errand_amounts[errand_ind]
         errand_complete_yet = self.data.weekly_errand_scores[errand_ind] == 100#errand_amount
@@ -201,7 +212,7 @@ class Dashboard(QMainWindow):
         hour = now.hour+float(now.minute)/60.
         self.data.work_time_hours = np.append(self.data.work_time_hours, hour)
         self.data.work_time_history = np.append(self.data.work_time_history, self.data.work_time)
-        self.reportsWidget.update_time_served()
+        self.reports.update_time_served()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Qt.Key_Escape:
