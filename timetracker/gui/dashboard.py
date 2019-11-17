@@ -29,10 +29,8 @@ class Dashboard(QMainWindow):
         self.settings.setFallbacksEnabled(False)    # File only, no fallback to registry or.
 
         # First get the report type data
-        data_exists = self.logger.check_data()
-        self.data = Data()  # use the defaults
-        if data_exists:
-            self.data = self.logger.data_load(self.data)  # load saved values
+        self.data = Data()  # get the defaults
+        self.data = self.logger.load_existing_data(self.data)
 
         # pprint.pprint(self.data.__dict__)
 

@@ -24,12 +24,22 @@ class Logger():
                 self.config = exc
         self.config['gui_cache_address'] = self.config['gui_cache_address'].replace('<DATE>',self.day)
 
+    def load_existing_data(self, data):
+        data_exists = self.check_data()
+        if data_exists:
+            print(f"loading data from {self.config['data_logs']}/{self.day}")
+            data = self.data_load(data)  # load saved values
+        else:
+            print("No data logs found for today")
+        return data
+
     def check_data(self):
         result = False
         if os.path.exists(self.config['data_logs']):
+            print(f"data logs exist at {self.config['data_logs']}")
             with h5py.File(self.config['data_logs'], 'r') as hf:
                 keys = list(hf.keys())
-                print(keys)
+                print(f"data for days {keys} exist")
                 if self.day in keys:
                     result = True
         print(result)

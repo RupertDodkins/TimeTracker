@@ -73,6 +73,6 @@ class Reporter(QWidget):
         self.axes[self.ts_hist_loc[0],self.ts_hist_loc[1]].set_ylabel('amount')
 
     def update_time_hist(self):
-        hist = self.ts_hist = self.axes[self.ts_hist_loc[0],self.ts_hist_loc[1]].hist(self.data.work_time_history/3600, bins=self.day_hours, color='b')
+        self.ts_hist = self.axes[self.ts_hist_loc[0],self.ts_hist_loc[1]].hist(self.data.work_time_history/3600, bins=self.day_hours, color='b')
         self.canvas.draw()
         # hist.pop(0).remove()
