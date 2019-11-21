@@ -42,7 +42,6 @@ class Logger():
                 print(f"data for days {keys} exist")
                 if self.day in keys:
                     result = True
-        print(result)
         return result
 
 
@@ -54,7 +53,10 @@ class Logger():
             day = hf.get(self.day)
             for key, value in data.__dict__.items():
                 print(key, value)
-                setattr(data,key,day.get(key).value)
+                try:
+                    setattr(data,key,day.get(key).value)
+                except AttributeError:
+                    print(f"Day '{day}' has no atrribute '{key}'. Using the default value '{value}'")
             # pprint(data.__dict__)
             data.daily_errands = np.array([str(e)[2:-1] for e in data.daily_errands])
             data.weekly_errands = np.array([str(e)[2:-1] for e in data.weekly_errands])
