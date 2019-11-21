@@ -44,7 +44,7 @@ class Reporter(QWidget):
         self.ims = np.empty((self.nrows, self.ncols), dtype=AxesImage)
 
         # self.time = time.time()
-        self.day_hours = np.arange(9, 17, 0.25)
+        self.day_hours = np.arange(10, 17, 0.25)
         self.actual_day_hours = np.arange(datetime.now().hour+float(datetime.now().minute)/60, 23, 0.25)
         self.ts_loc = [0,0]
         self.ts_hist_loc = [1,0]

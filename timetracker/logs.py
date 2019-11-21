@@ -69,7 +69,7 @@ class Logger():
                 keys = list(hf.keys())
             mode = 'w' if self.day in keys else 'a'
         else:
-            mode = 'w'
+            mode = 'a'
 
         with h5py.File(self.config['data_logs'], mode=mode) as hf:
             day = hf.create_group(self.day)

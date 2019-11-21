@@ -16,6 +16,8 @@ class Data():
         self.todos = np.array([]*3)
         self.todos_complete = np.array([False,False,False])
         self.numtodos = 0
+        self.todo_goal = 100
+        self.todo_score = 0
 
         self.daily_errand_score = 0
         self.daily_errands = np.array(['Drink 3 bottles', 'Meditate', 'Tidy desk', 'Tidy room',
