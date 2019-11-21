@@ -5,9 +5,10 @@ import numpy as np
 from datetime import datetime
 from PyQt5.QtCore import pyqtSlot, QTimer
 from PyQt5 import Qt, QtCore
-from PyQt5.QtWidgets import QMainWindow, QLabel, QProgressBar
+from PyQt5.QtWidgets import QMainWindow, QLabel, QProgressBar, QCheckBox, QTextEdit, QLineEdit, \
+    QPushButton, QVBoxLayout, QHBoxLayout, QWidget
 from PyQt5.uic import loadUi
-# from PyQt5 import QtGui
+from PyQt5 import QtGui
 from PyQt5.QtCore import QSettings
 import pprint
 from timetracker.logs import Logger
@@ -78,11 +79,104 @@ class Dashboard(QMainWindow):
         self.disp_time()
 
     def todoWidget(self):
-        for checkboxes in [self.checkBox_1, self.checkBox_2, self.checkBox_3]:
-            checkboxes.stateChanged.connect(self.clickBox)
-        for textEdit in [self.textEdit, self.textEdit_2, self.textEdit_3]:
-            textEdit.textChanged.connect(self.on_text_changed)
+        # for checkboxes in [self.checkBox_1, self.checkBox_2, self.checkBox_3]:
+        #     checkboxes.stateChanged.connect(self.clickBox)
+        # for textEdit in [self.textEdit, self.textEdit_2, self.textEdit_3]:
+        #     textEdit.textChanged.connect(self.on_text_changed)
 
+        self.vbox = QVBoxLayout()
+
+        self.todo_checkBox = QCheckBox()
+        self.todo_textEdit = QTextEdit()
+        self.todo_lineEdit = QLineEdit()
+        self.todo_pushButton = QPushButton()
+
+        self.todo_checkBox.setMinimumSize(20,20)
+        self.todo_checkBox.setMaximumSize(20,20)
+        self.todo_textEdit.setMinimumWidth(400)
+        self.todo_textEdit.setMaximumWidth(400)
+        self.todo_lineEdit.setMinimumWidth(41)
+        self.todo_lineEdit.setMaximumWidth(41)
+        self.todo_pushButton.setMinimumWidth(46)
+        self.todo_pushButton.setMaximumWidth(46)
+
+        self.todo_pushButton.setText('+')
+
+        self.todo_hBox_0 = QHBoxLayout()
+        self.todo_hBox_0.addWidget(self.todo_checkBox)
+        self.todo_hBox_0.addWidget(self.todo_textEdit)
+        self.todo_hBox_0.addWidget(self.todo_lineEdit)
+        self.todo_hBox_0.addWidget(self.todo_pushButton)
+
+        self.todo_checkBox.stateChanged.connect(self.clickBox)
+        self.todo_textEdit.textChanged.connect(self.on_text_changed)
+        self.todo_lineEdit.textChanged.connect(self.on_score_changed)
+        self.todo_pushButton.clicked.connect(self.add_todo)
+        # v_widget = QWidget()
+        # v_widget.setLayout(self.vbox)
+        # v_widget.setFixedWidth(10)
+        self.vbox.addLayout(self.todo_hBox_0 )
+        self.vbox.addWidget(self.progressBar)
+        self.todo_groupBox.setLayout(self.vbox)
+
+
+    def add_todo(self):
+        self.data.numtodos += 1
+        setattr(self, f'todo_checkBox_{self.data.numtodos}', QCheckBox())
+        todo_checkBox = getattr(self, f'todo_checkBox_{self.data.numtodos}')
+        todo_checkBox.stateChanged.connect(self.clickBox)
+        # todo_checkBox.setGeometry(25,70, 20, 20)
+        todo_checkBox.setMinimumSize(20,20)
+        todo_checkBox.setMaximumSize(20,20)
+
+        setattr(self, f'todo_textEdit_{self.data.numtodos}', QTextEdit())
+        todo_textEdit = getattr(self, f'todo_textEdit_{self.data.numtodos}')
+        todo_textEdit.textChanged.connect(self.on_text_changed)
+        todo_textEdit.setMinimumWidth(400)
+        todo_textEdit.setMaximumWidth(400)
+
+        setattr(self, f'todo_lineEdit_{self.data.numtodos}', QLineEdit())
+        todo_lineEdit = getattr(self, f'todo_lineEdit_{self.data.numtodos}')
+        todo_lineEdit.textChanged.connect(self.on_score_changed)
+        # todo_lineEdit.setGeometry(500, 70, 40, 40)
+        todo_lineEdit.setMinimumWidth(41)
+        todo_lineEdit.setMaximumWidth(41)
+
+        setattr(self, f'todo_pushButton_{self.data.numtodos}', QPushButton())
+        todo_pushButton = getattr(self, f'todo_pushButton_{self.data.numtodos}')
+        todo_pushButton.setMinimumWidth(46)
+        todo_pushButton.setMaximumWidth(46)
+        todo_pushButton.setText('x')
+        # todo_pushbox.clicked.connect(self.add_todo)
+        # todo_pushbox.setGeometry(545, 70, 46, 46)
+
+        setattr(self, f'todo_hBox_{self.data.numtodos}', QHBoxLayout())
+        hbox = getattr(self, f'todo_hBox_{self.data.numtodos}')
+        hbox.addWidget(todo_checkBox)
+        hbox.addWidget(todo_textEdit)
+        hbox.addWidget(todo_lineEdit)
+        hbox.addWidget(todo_pushButton)
+
+        self.progressBar.setParent(None)
+        self.vbox.addLayout(hbox)
+        self.progressBar = QProgressBar()
+        self.progressBar.setValue(self.data.todo_score)
+        self.progressBar.setGeometry(5,215,585,30)
+        self.progressBar.setMinimumSize(585,30)
+        self.progressBar.setMaximumSize(585,30)
+        self.vbox.addWidget(self.progressBar)
+        self.todo_groupBox.setLayout(self.vbox)
+
+        print(self.data.numtodos)
+        self.show()
+
+        # self.save()
+        # self.__init__()
+
+    def on_score_changed(self):
+        # self.data.todo_goal = self.todo_lineEdit.Value
+        # print(self.data.todo_goal)
+        print('score change')
     def errandsWidgets(self):
         for scale in ['daily', 'weekly']:
             comboBox = getattr(self, f'{scale}_comboBox')
@@ -123,9 +217,9 @@ class Dashboard(QMainWindow):
         self.reports.update_time_hist()
 
     def on_text_changed(self):
-        self.data.todos = [[self.textEdit.toPlainText(), 'lol'],
-                           [self.textEdit_2.toPlainText(), 'lol'],
-                           [self.textEdit_3.toPlainText(), 'lol']]
+        self.data.todos = [[self.todo_textEdit.toPlainText()]]#, 'lol'],
+                           # [self.textEdit_2.toPlainText(), 'lol'],
+                           # [self.textEdit_3.toPlainText(), 'lol']]
 
     def closeEvent(self, event):
         self.logger.gui_save(self.ui, self.settings)

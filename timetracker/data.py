@@ -15,10 +15,11 @@ class Data():
         self.todo_score = 0
         self.todos = np.array([]*3)
         self.todos_complete = np.array([False,False,False])
+        self.numtodos = 0
 
         self.daily_errand_score = 0
         self.daily_errands = np.array(['Drink 3 bottles', 'Meditate', 'Tidy desk', 'Tidy room',
-                              'NN', 'Update YNAB', 'Floss', 'Email to zero', 'In before 10am'])
+                              'NN', 'Update YNAB', 'Floss', 'Email to zero', 'In before 10am', 'Phone Mum'])
         self.daily_errand_amounts = np.ones(len(self.daily_errands))
         self.daily_errand_amounts[self.daily_errands=='Drink 3 bottles']=3.#np.array([3.,1,1,1,1,1,2,1,1])
         self.daily_errand_amounts[self.daily_errands=='Floss']=2
