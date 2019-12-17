@@ -38,7 +38,6 @@ class Dashboard(QMainWindow):
 
         # if gui cache exists it will be loaded and overwrite the defaults
         self.logger.gui_restore(self.ui, self.settings)
-
         # self.data = self.logger.update_data(self.ui)
 
     def initialize_gui(self):
@@ -260,8 +259,8 @@ class Dashboard(QMainWindow):
         self.reports = Reporter(self)
         self.horizontalLayout_2.addWidget(self.reports)
         self.reports_groupBox.setLayout(self.horizontalLayout_2)
-        self.reports.initialize_lineplots()
-        self.reports.initialize_time_hist()
+        # self.reports.initialize_lineplots()
+        # self.reports.initialize_time_hist()
         # self.reports.update_time_hist()
 
     def update_todo_text(self):

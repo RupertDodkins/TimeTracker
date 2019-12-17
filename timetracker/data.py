@@ -25,7 +25,7 @@ class Data():
         self.goals = [self.goal_time, self.todo_goal, self.efficiency_goal]
         self.start_goals = [0, 0, self.efficiency_goal]
         self.metrics_history = [[], [], []]
-        self.ylabels = ['Time worked (seconds)', 'Impact', 'Efficiency']
+        self.ylabels = ['Time worked (s)', 'Impact', 'Efficiency']
 
         self.daily_errand_score = 0
         self.daily_errands = np.array(['Drink water x3', 'Meditate', 'Tidy desk', 'Tidy room',

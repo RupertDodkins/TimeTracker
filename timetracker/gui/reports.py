@@ -35,7 +35,10 @@ class Reporter(QWidget):
 
         for r in range(self.nrows):
             for c in range(self.ncols):
-                self.figure.add_subplot(gs[r,c])
+                if r == 0 and c == 0:
+                    ax0 = self.figure.add_subplot(gs[r,c])
+                else:
+                    ax = self.figure.add_subplot(gs[r,c], sharex = ax0)
 
         self.axes = np.array(self.figure.axes).reshape(self.nrows, self.ncols)
         self.cax = []
@@ -83,7 +86,11 @@ class Reporter(QWidget):
         self.ts_hist_loc = [0,1]
         self.completed_lines = [None, None, None]
         self.ts_hist = None
-        # self.figure.tight_layout()
+
+        self.initialize_lineplots()
+        self.initialize_time_hist()
+        self.figure.tight_layout()  # why does this have to be here to not ignore the axis labels?
+        self.figure.subplots_adjust(top=0.965, bottom=0.1, left=0.17, right=0.971, hspace=0, wspace=0.34)
 
     def update_start(self, text):
         self.start_hour_val = int(text)
@@ -102,12 +109,23 @@ class Reporter(QWidget):
 
     def initialize_lineplots(self):
         self.goal_lines = []
-        for start, goal, ax, ylabel in zip(self.data.start_goals, self.data.goals, self.axes[:,0], self.data.ylabels):
-            goal_steps = np.linspace(start, goal, len(self.day_hours))  #factor of 3600 will be from here
-            self.goal_lines.append(ax.plot(self.day_hours, goal_steps, linestyle='--', color='k'))
-            ax.set_xlabel('Clock time (hours)')
-            ax.set_ylabel(ylabel)
-            ax.legend()
+        for y in range(2):
+            axes = self.axes[:,y]
+            for i, start, goal, ax, ylabel in zip(range(len(self.data.goals)), self.data.start_goals, self.data.goals,
+                                                  axes, self.data.ylabels):
+
+                if i == 2:
+                    ax.set_xlabel('Clock time (hours)')
+                else:
+                    plt.setp(ax.get_xticklabels(), visible=False)
+
+                if y==0:
+                    goal_steps = np.linspace(start, goal, len(self.day_hours))  # factor of 3600 will be from here
+                    self.goal_lines.append(ax.plot(self.day_hours, goal_steps, linestyle='--', color='k'))
+                    ax.set_ylabel(ylabel)
+                else:
+                    ax.set_ylabel('Amount')
+                ax.legend()
 
     def update_goals(self, goals):
         for ig, line, start, goal, ax in zip(range(len(self.data.goals)), self.goal_lines, self.data.start_goals, goals, self.axes[:,0]):
@@ -137,7 +155,7 @@ class Reporter(QWidget):
             # plt.show(block=True)
 
     def initialize_time_hist(self):
-        self.axes[self.ts_hist_loc[0],self.ts_hist_loc[1]].set_xlabel('Clock time (hours)')
+        # self.axes[self.ts_hist_loc[0],self.ts_hist_loc[1]].set_xlabel('Clock time (hours)')
         self.axes[self.ts_hist_loc[0],self.ts_hist_loc[1]].set_ylabel('Amount')
 
     def update_time_hist(self):
