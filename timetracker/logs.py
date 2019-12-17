@@ -10,6 +10,7 @@ from PyQt5.QtCore import QSettings
 import inspect
 from datetime import datetime
 from pprint import pprint
+from timetracker.data import Data
 
 class Logger():
     def __init__(self):
@@ -27,7 +28,6 @@ class Logger():
     def load_existing_data(self, data):
         data_exists = self.check_data()
         if data_exists:
-            print(f"loading data from {self.config['data_logs']}/{self.day}")
             data = self.data_load(data)  # load saved values
         else:
             print("No data logs found for today")
@@ -49,10 +49,10 @@ class Logger():
         return os.path.exists(self.config['gui_cache_address'])
 
     def data_load(self, data):
+        print(f"loading data from {self.config['data_logs']}/{self.day}")
         with h5py.File(self.config['data_logs'], 'r') as hf:
             day = hf.get(self.day)
             for key, value in data.__dict__.items():
-                print(key, value)
                 try:
                     setattr(data,key,day.get(key).value)
                 except AttributeError:
@@ -65,26 +65,27 @@ class Logger():
 
     def data_save(self, data):
         if os.path.exists(self.config['data_logs']):
-            with h5py.File(self.config['data_logs'], mode='r') as hf:
+            print(f"Config file exists at {self.config['data_logs']}")
+            with h5py.File(self.config['data_logs'], mode='a') as hf:
                 keys = list(hf.keys())
-            mode = 'w' if self.day in keys else 'a'
-        else:
-            mode = 'a'
+                if self.day in keys:
+                    print(f"and group '{self.day}' already exists. Overwriting")
+                    del hf[self.day]
 
-        with h5py.File(self.config['data_logs'], mode=mode) as hf:
+        with h5py.File(self.config['data_logs'], mode='a') as hf:
             day = hf.create_group(self.day)
             for key, value in data.__dict__.items():
                 # saving lists of strings is tricky in h5py hence all the code below
                 str_list_type = self.categorize_string_lists(value)
                 if str_list_type is None:
                     day.create_dataset(key, data=value)
-                elif str_list_type == 1:  #key == weekly and dailly errands
+                elif str_list_type == 1:  #e.g. key == weekly and dailly errands
                     asciiList = [n.encode("ascii", "ignore") for n in value]
                     day.create_dataset(key, dtype='S20', data=asciiList)
-                elif str_list_type == 2:  #key == todos
+                elif str_list_type == 2:  #e.g. key == todos
                     day.create_dataset(key, data=np.string_(value))
                 else:
-                    print('This should be a single string. Not needed until now')
+                    print('This should be a single string. Not previously needed (until now?)')
                     raise NotImplementedError
 
 
@@ -230,3 +231,34 @@ class Logger():
                     if value is not None:
                         obj.addItem(value)
                 settings.endArray()
+
+    def manual_update(self):
+        print(self.day)
+        data = Data()
+        data = logger.load_existing_data(data)
+
+        print(data)
+        input_time = input('Enter time worked like this 10-11, 13-13.5, : ')
+
+        work_spells = input_time.split(',')
+        for s in range(len(work_spells)):
+            start, stop = np.float_(work_spells[s].split('-'))
+            spell_history = np.arange(start, stop, 1./3600)
+            print(start, stop, spell_history)
+            spell_amount = np.arange(0, stop-start, 1./3600) * 3600
+
+            assert len(spell_amount) == len(spell_history)
+            if len(data.work_time_hours) == 0:
+                prev_amount = 0
+            else:
+                prev_amount = data.work_time_hours[-1]
+            data.work_time_hours = np.append(data.work_time_hours, spell_history)
+            data.work_time_history = np.append(data.work_time_history, spell_amount+prev_amount)
+            assert len(data.work_time_hours) == len(data.work_time_history)
+
+        pprint(data.__dict__)
+        self.data_save(data)
+
+if __name__ == '__main__':
+    logger = Logger()
+    logger.manual_update()
