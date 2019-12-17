@@ -63,6 +63,7 @@ class Dashboard(QMainWindow):
         self.break_mode = False
         self.pomodoro_duration = 25 * 60  #3
         self.break_duration = 5 * 60
+        self.update_sec = 1
         self.pause_time = self.pomodoro_duration
         self.reset.clicked.connect(self.do_reset)
         self.start.clicked.connect(self.do_start)
@@ -120,7 +121,6 @@ class Dashboard(QMainWindow):
         this_ind = len(self.todo_hBoxs)
         self.todo_points = np.append(self.todo_points,0)
 
-        print('todoind', this_ind)
         self.todo_checkBoxs = np.append(self.todo_checkBoxs, QCheckBox())
         self.todo_checkBoxs[this_ind].stateChanged.connect(self.clickBox_wrapper(this_ind))
         self.todo_checkBoxs[this_ind].setMinimumSize(20,20)
@@ -155,7 +155,7 @@ class Dashboard(QMainWindow):
         self.progressBar.setParent(None)
         self.progressBar = QProgressBar()
         self.progressBar.setValue(100*self.data.todo_score/self.data.todo_goal)
-        self.progressBar.setGeometry(3,215,585,30)
+        self.progressBar.setGeometry(0,215,585,30)
         self.progressBar.setMinimumSize(585,30)
         self.progressBar.setMaximumSize(585,30)
         self.vbox.addWidget(self.progressBar)
@@ -163,7 +163,6 @@ class Dashboard(QMainWindow):
 
     def remove_todo_wrapper(self, this_ind):
         def remove_todo():
-            print('this', this_ind, self.todo_checkBoxs)
             # remove the hbox contents
             self.todo_checkBoxs[this_ind].setParent(None)
             self.todo_textEdits[this_ind].setParent(None)
@@ -181,7 +180,6 @@ class Dashboard(QMainWindow):
 
             # recalculate everything
             for ind in range(1,self.last_ind):
-                print('ind', ind, len(self.todo_pushButtons))
                 self.todo_pushButtons[ind].clicked.disconnect()
                 self.todo_pushButtons[ind].clicked.connect(self.remove_todo_wrapper(ind))
                 self.todo_checkBoxs[ind].stateChanged.disconnect()
@@ -192,21 +190,19 @@ class Dashboard(QMainWindow):
             self.data.todo_score = np.sum(self.todo_points)
             self.data.todo_goal = sum([int(lineEdits.text()) for lineEdits in self.todo_lineEdits])
             self.update_todo_text()
-            print('todoind_204', self.last_ind, 'this', this_ind)
             self.progressBar.setValue(100 * self.data.todo_score / self.data.todo_goal)
 
         return remove_todo
 
     def score_changed_wrapper(self, this_ind):
         def on_score_changed():
-            # todo_lineEdit = getattr(self, f'todo_lineEdit_{this_ind}')
-            print('points', self.todo_points, this_ind)
             if self.todo_checkBoxs[this_ind].isChecked():
                 self.todo_points[this_ind] = self.todo_lineEdits[this_ind].text()
             self.data.todo_score = np.sum(self.todo_points)
-            self.data.todo_goal = sum([int(lineEdits.text()) for lineEdits in self.todo_lineEdits])
-            print('points', self.todo_points, this_ind)
-            # print('score change', this_ind, self.todo_lineEdits[this_ind].text(), self.todo_points, self.todo_goal)
+            try:
+                self.data.todo_goal = sum([int(lineEdits.text()) for lineEdits in self.todo_lineEdits])
+            except ValueError:
+                pass
         return on_score_changed
 
     def clickBox_wrapper(self, this_ind):
@@ -218,30 +214,15 @@ class Dashboard(QMainWindow):
         return clickBox
 
     def add_points(self, this_ind):
-        # items = (layout.itemAt(i) for i in range(layout.count()))
-        # for w in items:
-        #     doSomething(w)
-
-        # todo_lineEdit = getattr(self, f'todo_lineEdit_{this_ind}')
-        # self.todo_points[this_ind] = todo_lineEdit.text()
-        # todo_points =
-        # self.data.todo_score += self.todo_points[this_ind]#/self.todo_goal
         self.todo_points[this_ind] = int(self.todo_lineEdits[this_ind].text())
         self.data.todo_score = np.sum(self.todo_points)
         self.data.todo_goal = sum([int(lineEdits.text()) for lineEdits in self.todo_lineEdits])
-
-        print('add_prog',self.todo_points, this_ind, self.todo_points[this_ind], self.data.todo_goal,
-              self.data.todo_score/self.data.todo_goal, self.data.todo_score)
         self.progressBar.setValue(100*self.data.todo_score/self.data.todo_goal)
 
     def sub_points(self, this_ind):
-        # self.data.todo_score -= 100./3
         self.todo_points[this_ind] = 0
         self.data.todo_score = np.sum(self.todo_points)
         self.data.todo_goal = sum([int(lineEdits.text()) for lineEdits in self.todo_lineEdits])
-
-        print('sub_prog',self.todo_points, self.todo_points[this_ind], self.data.todo_goal,
-              self.data.todo_score/self.data.todo_goal, self.data.todo_score)
         self.progressBar.setValue(100*self.data.todo_score/self.data.todo_goal)
 
     def errandsWidgets(self):
@@ -278,15 +259,13 @@ class Dashboard(QMainWindow):
     def reportsWidget(self):
         self.reports = Reporter(self)
         self.horizontalLayout_2.addWidget(self.reports)
-        self.reports.initialize_time_served()
-        self.reports.update_time_served()
+        self.reports_groupBox.setLayout(self.horizontalLayout_2)
+        self.reports.initialize_lineplots()
         self.reports.initialize_time_hist()
-        self.reports.update_time_hist()
+        # self.reports.update_time_hist()
 
     def update_todo_text(self):
         self.data.todos = [textEdit.toPlainText() for textEdit in self.todo_textEdits]
-        print(self.data.todos)
-        print('update todo last ind', self.last_ind)
 
     def closeEvent(self, event):
         self.logger.gui_save(self.ui, self.settings)
@@ -306,7 +285,7 @@ class Dashboard(QMainWindow):
 
     def update_goaltime(self):
         self.data.goal_time = self.spinBox.value() * 25 * 60
-        self.reports.update_goal_line(self.data.goal_time)
+        self.reports.update_goals(self.data.goals)
 
     def daily_check_errand(self, text):
         errand_ind = np.where(text == self.data.daily_errands)[0][0]
@@ -333,8 +312,6 @@ class Dashboard(QMainWindow):
             self.data.daily_errand_scores[errand_ind] += 100. / errand_amount
             progressbar.setValue(self.data.daily_errand_scores[errand_ind])
 
-        # print(self.errand_pb_1.value())
-
     def prog_weekly_errand(self, errand_ind):
         progressbar = getattr(self, f"weekly_errand_pb_{errand_ind}")
 
@@ -360,9 +337,13 @@ class Dashboard(QMainWindow):
         now = datetime.now()
         hour = now.hour+float(now.minute)/60.
         self.data.work_time_hours = np.append(self.data.work_time_hours, hour)
-        self.data.work_time_history = np.append(self.data.work_time_history, self.data.work_time)
-        self.reports.update_time_served()
-        self.reports.update_time_hist()
+        # self.data.work_time_history = np.append(self.data.work_time_history, self.data.work_time)
+        self.data.metrics_history[0] = np.append(self.data.metrics_history[0], self.data.work_time)
+        self.data.metrics_history[1] = np.append(self.data.metrics_history[1], self.data.todo_score)
+        self.data.metrics_history[2] = np.append(self.data.metrics_history[2],
+                                                 (self.data.todo_score/self.data.todo_goal - self.data.work_time/self.data.goal_time)*100)
+        self.reports.update_lineplots()
+        # self.reports.update_time_hist()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Qt.Key_Escape:
@@ -399,10 +380,12 @@ class Dashboard(QMainWindow):
                 self.data.work_time += difference
                 self.time = self.pause_time - np.int(delta)
 
+            #todo update to do it on every pmodoro_time interval
+            #something like orig_time % self.pomodoro_time >= 0 and self.time % self.pomodoro_time < 0
             if orig_time >= 0 and self.time < 0:  # timer transitions below 0
                 self.update_pomodoros()
 
-            if orig_time//30 != self.time//30:  # timer transitions past minute mark
+            if orig_time//self.update_sec != self.time//self.update_sec:  # timer transitions past minute mark
                 self.update_work_time_times()
 
         self.display()
