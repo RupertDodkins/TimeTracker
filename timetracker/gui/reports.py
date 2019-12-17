@@ -90,7 +90,7 @@ class Reporter(QWidget):
         self.initialize_lineplots()
         self.initialize_time_hist()
         self.figure.tight_layout()  # why does this have to be here to not ignore the axis labels?
-        self.figure.subplots_adjust(top=0.965, bottom=0.1, left=0.17, right=0.971, hspace=0, wspace=0.34)
+        self.figure.subplots_adjust(top=0.965, bottom=0.1, left=0.12, right=0.971, hspace=0, wspace=0.28)
 
     def update_start(self, text):
         self.start_hour_val = int(text)

@@ -582,7 +582,7 @@ logged</string>
      <rect>
       <x>635</x>
       <y>20</y>
-      <width>616</width>
+      <width>721</width>
       <height>766</height>
      </rect>
     </property>
@@ -598,7 +598,7 @@ logged</string>
        <rect>
         <x>0</x>
         <y>5</y>
-        <width>601</width>
+        <width>711</width>
         <height>721</height>
        </rect>
       </property>
@@ -627,7 +627,7 @@ logged</string>
         <rect>
          <x>6</x>
          <y>30</y>
-         <width>586</width>
+         <width>696</width>
          <height>681</height>
         </rect>
        </property>

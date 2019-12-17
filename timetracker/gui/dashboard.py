@@ -54,7 +54,7 @@ class Dashboard(QMainWindow):
 
         left = 200
         top = 100
-        width = 1255
+        width = 1360
         height = 825
         self.setGeometry(left, top, width, height)
 
