@@ -187,7 +187,7 @@ class Dashboard(QMainWindow):
                 self.todo_lineEdits[ind].textChanged.connect(self.score_changed_wrapper(ind))
             self.last_ind = len(self.todo_hBoxs) - 1  # first row is 0
             self.data.todo_score = np.sum(self.todo_points)
-            self.data.todo_goal = sum([int(lineEdits.text()) for lineEdits in self.todo_lineEdits])
+            # self.data.todo_goal = sum([int(lineEdits.text()) for lineEdits in self.todo_lineEdits])
             self.update_todo_text()
             self.progressBar.setValue(100 * self.data.todo_score / self.data.todo_goal)
 
@@ -198,10 +198,10 @@ class Dashboard(QMainWindow):
             if self.todo_checkBoxs[this_ind].isChecked():
                 self.todo_points[this_ind] = self.todo_lineEdits[this_ind].text()
             self.data.todo_score = np.sum(self.todo_points)
-            try:
-                self.data.todo_goal = sum([int(lineEdits.text()) for lineEdits in self.todo_lineEdits])
-            except ValueError:
-                pass
+            # try:
+            #     self.data.todo_goal = sum([int(lineEdits.text()) for lineEdits in self.todo_lineEdits])
+            # except ValueError:
+            #     pass
         return on_score_changed
 
     def clickBox_wrapper(self, this_ind):
@@ -215,13 +215,13 @@ class Dashboard(QMainWindow):
     def add_points(self, this_ind):
         self.todo_points[this_ind] = int(self.todo_lineEdits[this_ind].text())
         self.data.todo_score = np.sum(self.todo_points)
-        self.data.todo_goal = sum([int(lineEdits.text()) for lineEdits in self.todo_lineEdits])
+        # self.data.todo_goal = sum([int(lineEdits.text()) for lineEdits in self.todo_lineEdits])
         self.progressBar.setValue(100*self.data.todo_score/self.data.todo_goal)
 
     def sub_points(self, this_ind):
         self.todo_points[this_ind] = 0
         self.data.todo_score = np.sum(self.todo_points)
-        self.data.todo_goal = sum([int(lineEdits.text()) for lineEdits in self.todo_lineEdits])
+        # self.data.todo_goal = sum([int(lineEdits.text()) for lineEdits in self.todo_lineEdits])
         self.progressBar.setValue(100*self.data.todo_score/self.data.todo_goal)
 
     def errandsWidgets(self):

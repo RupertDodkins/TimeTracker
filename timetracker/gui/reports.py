@@ -142,13 +142,20 @@ class Reporter(QWidget):
                 line.remove()
             ax.collections.clear()
             self.completed_lines[ig],  = ax.plot(self.data.work_time_hours, metric, color='b')
+            if ig ==2:
+                min, max = np.min(metric), np.max(metric)
+                ax.set_ylim(min, max)
 
-            # todo implement this
-            # current_goal = goal * (self.data.work_time_hours[-1]-self.start_hour_val)/(self.stop_hour_val - self.start_hour_val)
-            # goal_hours = np.linspace(0, current_goal, len(self.data.work_time_hours))
-            # self.axes[self.ts_loc[0],self.ts_loc[1]].fill_between(self.data.work_time_hours,
-            #                                                       np.array(self.data.work_time_history)/3600, goal_hours,
-            #                                                       label='Surviving', facecolor='red', alpha=0.5)
+            current_goal = goal * (self.data.work_time_hours[-1]-self.start_hour_val)/(self.stop_hour_val - self.start_hour_val)
+            first_goal = goal * (self.data.work_time_hours[0]-self.start_hour_val)/(self.stop_hour_val - self.start_hour_val)
+            if ig ==0:
+                print(first_goal, current_goal, 'current goal')
+            goal_hours = np.linspace(first_goal, current_goal, len(self.data.work_time_hours))
+            ax.fill_between(self.data.work_time_hours, metric, goal_hours, where=goal_hours >= metric,
+                            label='Surviving', facecolor='red', alpha=0.5,interpolate=True)
+            ax.fill_between(self.data.work_time_hours, metric, goal_hours, where=goal_hours <= metric,
+                            label='Thriving', facecolor='green', alpha=0.5,interpolate=True)
+
             # print(self.data.work_time_hours,np.array(self.data.work_time_history)/3600, goal_hours)
             self.canvas.draw()
             # line.pop(0).remove()
