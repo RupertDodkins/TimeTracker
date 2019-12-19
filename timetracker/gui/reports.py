@@ -19,9 +19,9 @@ class Reporter(QWidget):
         super(Reporter, self).__init__(parent)
 
         self.data = parent.data
-        self.start_hour_val=datetime.now().hour if datetime.now().hour>9 else 9
-        self.stop_hour_val=24 if datetime.now().hour>17 else 17
-        self.frac_hour_val=0.25
+        self.start_hour_val = datetime.now().hour if datetime.now().hour > 9 else 9
+        self.stop_hour_val = 24 if datetime.now().hour >= 17 else 17
+        self.frac_hour_val = 0.25
 
         self.nrows, self.ncols = nrows, ncols
         self.figure = Figure(figsize=(4*ncols,3*nrows))
@@ -146,17 +146,19 @@ class Reporter(QWidget):
                 min, max = np.min(metric), np.max(metric)
                 ax.set_ylim(min, max)
 
-            current_goal = goal * (self.data.work_time_hours[-1]-self.start_hour_val)/(self.stop_hour_val - self.start_hour_val)
-            first_goal = goal * (self.data.work_time_hours[0]-self.start_hour_val)/(self.stop_hour_val - self.start_hour_val)
+            m = goal/(self.stop_hour_val - self.start_hour_val)
+            first_goal = m * (self.data.work_time_hours[0]-self.start_hour_val)
+            current_goal = m * (self.data.work_time_hours[-1]-self.start_hour_val)
+            # current_goal = goal * (self.data.work_time_hours[-1]-self.start_hour_val)/(self.stop_hour_val - self.start_hour_val)
+            # first_goal = goal * (self.data.work_time_hours[0]-self.start_hour_val)/(self.stop_hour_val - self.start_hour_val)
             if ig ==0:
-                print(first_goal, current_goal, 'current goal')
+                print(self.stop_hour_val, self.start_hour_val, self.data.work_time_hours[0], self.data.work_time_hours[-1], first_goal, current_goal, 'current goal')
             goal_hours = np.linspace(first_goal, current_goal, len(self.data.work_time_hours))
             ax.fill_between(self.data.work_time_hours, metric, goal_hours, where=goal_hours >= metric,
                             label='Surviving', facecolor='red', alpha=0.5,interpolate=True)
             ax.fill_between(self.data.work_time_hours, metric, goal_hours, where=goal_hours <= metric,
                             label='Thriving', facecolor='green', alpha=0.5,interpolate=True)
 
-            # print(self.data.work_time_hours,np.array(self.data.work_time_history)/3600, goal_hours)
             self.canvas.draw()
             # line.pop(0).remove()
             # plt.show(block=True)
