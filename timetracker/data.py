@@ -23,6 +23,7 @@ class Data():
         self.efficiency_goal = 0
 
         self.goals = [self.goal_time, self.todo_goal, self.efficiency_goal]
+        self.goal_hours = [[],[],[]]
         self.start_goals = [0, 0, self.efficiency_goal]
         self.metrics_history = [[], [], []]
         self.ylabels = ['Time worked (s)', 'Impact', 'Efficiency']

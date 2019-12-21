@@ -9,7 +9,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.image import AxesImage
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QLabel
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QLabel, QPushButton
 from datetime import datetime
 
 class Reporter(QWidget):
@@ -50,6 +50,7 @@ class Reporter(QWidget):
         start_label = QLabel()
         stop_label = QLabel()
         frac_label = QLabel()
+        zoom_buttom = QPushButton()
 
         start_combo.addItems(str(h) for h in range(24))
         stop_combo.addItems(str(h) for h in range(1,25))
@@ -60,12 +61,15 @@ class Reporter(QWidget):
         start_combo.setCurrentText(str(self.start_hour_val))
         stop_combo.setCurrentText(str(self.stop_hour_val))
         frac_combo.setCurrentText(str(self.frac_hour_val))
+        zoom_buttom.setText('Quick Zoom')
 
 
         start_combo.activated[str].connect(self.update_start)
         stop_combo.activated[str].connect(self.update_stop)
         frac_combo.activated[str].connect(self.update_frac)
+        zoom_buttom.clicked.connect(self.quick_zoom)
 
+        self.reportsHBox.addWidget(zoom_buttom)
         self.reportsHBox.addWidget(start_label)
         self.reportsHBox.addWidget(start_combo)
         self.reportsHBox.addWidget(stop_label)
@@ -91,6 +95,14 @@ class Reporter(QWidget):
         self.initialize_time_hist()
         self.figure.tight_layout()  # why does this have to be here to not ignore the axis labels?
         self.figure.subplots_adjust(top=0.965, bottom=0.1, left=0.12, right=0.971, hspace=0, wspace=0.28)
+
+    def quick_zoom(self):
+        xmin, xmax = self.data.work_time_hours[-1] + np.array([-0.5, 0.5])
+        for x in range(2):
+        for y in range(3):
+            self.axes[y, 0].set_xlim(xmin,xmax)#,ymin,ymax])
+            # ymin, ymax = self.data.metrics_history[y][-1] * np.array([0.5,1.5])
+            # self.axes[y, 0].set_ylim(ymin,ymax)#,ymin,ymax])
 
     def update_start(self, text):
         self.start_hour_val = int(text)
@@ -125,7 +137,7 @@ class Reporter(QWidget):
                     ax.set_ylabel(ylabel)
                 else:
                     ax.set_ylabel('Amount')
-                ax.legend()
+                # ax.legend()
 
     def update_goals(self, goals):
         for ig, line, start, goal, ax in zip(range(len(self.data.goals)), self.goal_lines, self.data.start_goals, goals, self.axes[:,0]):
@@ -147,16 +159,16 @@ class Reporter(QWidget):
                 ax.set_ylim(min, max)
 
             m = goal/(self.stop_hour_val - self.start_hour_val)
-            first_goal = m * (self.data.work_time_hours[0]-self.start_hour_val)
+            # first_goal = m * (self.data.work_time_hours[0]-self.start_hour_val)
             current_goal = m * (self.data.work_time_hours[-1]-self.start_hour_val)
-            # current_goal = goal * (self.data.work_time_hours[-1]-self.start_hour_val)/(self.stop_hour_val - self.start_hour_val)
-            # first_goal = goal * (self.data.work_time_hours[0]-self.start_hour_val)/(self.stop_hour_val - self.start_hour_val)
             if ig ==0:
-                print(self.stop_hour_val, self.start_hour_val, self.data.work_time_hours[0], self.data.work_time_hours[-1], first_goal, current_goal, 'current goal')
-            goal_hours = np.linspace(first_goal, current_goal, len(self.data.work_time_hours))
-            ax.fill_between(self.data.work_time_hours, metric, goal_hours, where=goal_hours >= metric,
+                print(self.stop_hour_val, self.start_hour_val, self.data.work_time_hours[0], self.data.work_time_hours[-1], current_goal, goal, 'current goal')
+            self.data.goal_hours[ig].append(current_goal)
+
+            # ax.plot(self.data.work_time_hours, self.data.goal_hours[ig])
+            ax.fill_between(self.data.work_time_hours, metric, self.data.goal_hours[ig], where=self.data.goal_hours[ig] >= metric,
                             label='Surviving', facecolor='red', alpha=0.5,interpolate=True)
-            ax.fill_between(self.data.work_time_hours, metric, goal_hours, where=goal_hours <= metric,
+            ax.fill_between(self.data.work_time_hours, metric, self.data.goal_hours[ig], where=self.data.goal_hours[ig] <= metric,
                             label='Thriving', facecolor='green', alpha=0.5,interpolate=True)
 
             self.canvas.draw()
