@@ -675,7 +675,7 @@ logged</string>
     <property name="title">
      <string>View</string>
     </property>
-    <addaction name="actionReports_2"/>
+    <addaction name="action_concentration"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuView_2"/>
@@ -746,9 +746,19 @@ logged</string>
     <string>Close</string>
    </property>
   </action>
-  <action name="actionReports_2">
+  <action name="actionFull">
    <property name="text">
-    <string>Reports</string>
+    <string>Full</string>
+   </property>
+  </action>
+  <action name="actionDistraction_Free">
+   <property name="text">
+    <string>Distraction Free</string>
+   </property>
+  </action>
+  <action name="action_concentration">
+   <property name="text">
+    <string>Enter Concentration Mode</string>
    </property>
   </action>
  </widget>

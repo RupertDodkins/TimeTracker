@@ -256,6 +256,7 @@ class Dashboard(QMainWindow):
         self.actionSave_2.triggered.connect(self.save)
         self.actionLoad_2.triggered.connect(self.load)
         self.actionClose.triggered.connect(self.close)
+        self.action_concentration.triggered.connect(self.concentration_mode)
 
     def reportsWidget(self):
         self.reports = Reporter(self)
@@ -272,6 +273,16 @@ class Dashboard(QMainWindow):
         self.logger.gui_save(self.ui, self.settings)
         self.logger.data_save(self.data)
         event.accept()
+
+    def concentration_mode(self):
+        #todo crop top and left boarder too
+        #todo give option to revert
+        print('Entering distraction free mode')
+        left = 200
+        top = 100
+        width = 638
+        height = 305
+        self.setGeometry(left, top, width, height)
 
     def save(self):
         self.logger.gui_save(self.ui, self.settings)
