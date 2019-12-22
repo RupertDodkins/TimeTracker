@@ -61,10 +61,12 @@ class Dashboard(QMainWindow):
     def pomodoroWidget(self):
         self.break_mode = False
         self.pomodoro_duration = 25 * 60  #3
+        self.powerhour_duration = 60*60
         self.break_duration = 5 * 60
         self.update_sec = 1
         self.pause_time = self.pomodoro_duration
         self.reset.clicked.connect(self.do_reset)
+        self.power.clicked.connect(self.do_longreset)
         self.start.clicked.connect(self.do_start)
         self.break_2.clicked.connect(self.do_break)
         self.timer = QTimer()
@@ -410,6 +412,14 @@ class Dashboard(QMainWindow):
         self.timestamp_start = datetime.now()
         self.time = self.pomodoro_duration
         self.pause_time = self.pomodoro_duration
+        self.break_mode = False
+        self.display()
+
+    @Qt.pyqtSlot()
+    def do_longreset(self):
+        self.timestamp_start = datetime.now()
+        self.time = self.powerhour_duration
+        self.pause_time = self.powerhour_duration
         self.break_mode = False
         self.display()
 

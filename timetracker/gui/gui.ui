@@ -215,6 +215,13 @@
            </widget>
           </item>
           <item>
+           <widget class="QPushButton" name="power">
+            <property name="text">
+             <string>Power Hour</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="break_2">
             <property name="text">
              <string>Break</string>
