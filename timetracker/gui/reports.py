@@ -24,7 +24,8 @@ class Reporter(QWidget):
         self.frac_hour_val = 0.25
 
         self.nrows, self.ncols = nrows, ncols
-        self.figure = Figure(figsize=(4*ncols,3*nrows))
+        self.facecolor = (49./255,54./255,59./255)
+        self.figure = Figure(figsize=(4*ncols,3*nrows), facecolor=self.facecolor)
         # self.figure.subplots_adjust(left=0.175, bottom=0.1, right=0.89, top=0.9, wspace=0.005, hspace=0.2)
 
         # self.canvas = FigureCanvasQTAgg(self.figure)
@@ -98,7 +99,7 @@ class Reporter(QWidget):
 
     def quick_zoom(self):
         xmin, xmax = self.data.work_time_hours[-1] + np.array([-0.5, 0.5])
-        for x in range(2):
+        # for x in range(2):
         for y in range(3):
             self.axes[y, 0].set_xlim(xmin,xmax)#,ymin,ymax])
             # ymin, ymax = self.data.metrics_history[y][-1] * np.array([0.5,1.5])
@@ -121,11 +122,17 @@ class Reporter(QWidget):
 
     def initialize_lineplots(self):
         self.goal_lines = []
+        # import matplotlib
         for y in range(2):
             axes = self.axes[:,y]
             for i, start, goal, ax, ylabel in zip(range(len(self.data.goals)), self.data.start_goals, self.data.goals,
                                                   axes, self.data.ylabels):
 
+                ax.tick_params(color='w', labelcolor='w')
+                for spine in ax.spines.values():
+                    spine.set_edgecolor('w')
+                ax.xaxis.label.set_color('w')
+                ax.yaxis.label.set_color('w')
                 if i == 2:
                     ax.set_xlabel('Clock time (hours)')
                 else:
@@ -133,10 +140,11 @@ class Reporter(QWidget):
 
                 if y==0:
                     goal_steps = np.linspace(start, goal, len(self.day_hours))  # factor of 3600 will be from here
-                    self.goal_lines.append(ax.plot(self.day_hours, goal_steps, linestyle='--', color='k'))
+                    self.goal_lines.append(ax.plot(self.day_hours, goal_steps, linestyle='--', color=(64./255,173./255,233./255), linewidth=1))
                     ax.set_ylabel(ylabel)
                 else:
                     ax.set_ylabel('Amount')
+                ax.set_facecolor(self.facecolor)
                 # ax.legend()
 
     def update_goals(self, goals):
@@ -153,7 +161,7 @@ class Reporter(QWidget):
             if line is not None:
                 line.remove()
             ax.collections.clear()
-            self.completed_lines[ig],  = ax.plot(self.data.work_time_hours, metric, color='b')
+            self.completed_lines[ig],  = ax.plot(self.data.work_time_hours, metric, color='m')
             if ig ==2:
                 min, max = np.min(metric), np.max(metric)
                 ax.set_ylim(min, max)
@@ -169,7 +177,7 @@ class Reporter(QWidget):
             ax.fill_between(self.data.work_time_hours, metric, self.data.goal_hours[ig], where=self.data.goal_hours[ig] >= metric,
                             label='Surviving', facecolor='red', alpha=0.5,interpolate=True)
             ax.fill_between(self.data.work_time_hours, metric, self.data.goal_hours[ig], where=self.data.goal_hours[ig] <= metric,
-                            label='Thriving', facecolor='green', alpha=0.5,interpolate=True)
+                            label='Thriving', facecolor=(0./255,255./255,0./255),interpolate=True)
 
             self.canvas.draw()
             # line.pop(0).remove()
