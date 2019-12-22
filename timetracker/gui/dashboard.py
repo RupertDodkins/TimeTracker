@@ -3,13 +3,12 @@
 import os
 import numpy as np
 from datetime import datetime
-from PyQt5.QtCore import pyqtSlot, QTimer
+from PyQt5.QtCore import pyqtSlot, QTimer, QSettings
 from PyQt5 import Qt, QtCore
 from PyQt5.QtWidgets import QMainWindow, QLabel, QProgressBar, QCheckBox, QTextEdit, QLineEdit, \
-    QPushButton, QVBoxLayout, QHBoxLayout
+    QPushButton, QVBoxLayout, QHBoxLayout, QShortcut
 from PyQt5.uic import loadUi
-# from PyQt5 import QtGui
-from PyQt5.QtCore import QSettings
+from PyQt5.QtGui import QKeySequence
 import pprint
 from timetracker.logs import Logger
 from timetracker.data import Data
@@ -49,14 +48,14 @@ class Dashboard(QMainWindow):
         self.reportsWidget()
 
     def frame(self):
+        self.conc_mode = False
         title = 'Dashboard'
         self.setWindowTitle(title)
-
-        left = 200
-        top = 100
-        width = 1360
-        height = 825
-        self.setGeometry(left, top, width, height)
+        self.left = 200
+        self.top = 100
+        self.width = 1360
+        self.height = 825
+        self.setGeometry(self.left, self.top, self.width, self.height)
 
     def pomodoroWidget(self):
         self.break_mode = False
@@ -257,6 +256,14 @@ class Dashboard(QMainWindow):
         self.actionLoad_2.triggered.connect(self.load)
         self.actionClose.triggered.connect(self.close)
         self.action_concentration.triggered.connect(self.concentration_mode)
+        self.saveshortcut = QShortcut(QKeySequence("Ctrl+S"), self)
+        self.saveshortcut.activated.connect(self.save)
+        self.loadshortcut = QShortcut(QKeySequence("Ctrl+O"), self)
+        self.loadshortcut.activated.connect(self.load)
+        self.closeshortcut = QShortcut(QKeySequence("Ctrl+D"), self)
+        self.closeshortcut.activated.connect(self.save)
+        self.concshortcut = QShortcut(QKeySequence("Ctrl+C"), self)
+        self.concshortcut.activated.connect(self.concentration_mode)
 
     def reportsWidget(self):
         self.reports = Reporter(self)
@@ -275,14 +282,32 @@ class Dashboard(QMainWindow):
         event.accept()
 
     def concentration_mode(self):
-        #todo crop top and left boarder too
-        #todo give option to revert
+        self.conc_mode = True
         print('Entering distraction free mode')
-        left = 200
-        top = 100
-        width = 638
-        height = 305
-        self.setGeometry(left, top, width, height)
+        frame_geometry= self.tabWidget.geometry()
+        self.tabWidget.setGeometry(frame_geometry.left()-14,frame_geometry.top()-70,self.tabWidget.geometry().width(),
+                                   self.tabWidget.geometry().height())
+        width = 605
+        height = 200
+        self.setGeometry(self.left, self.top, width, height)
+        self.action_concentration.setText('Enter full display mode')
+        self.action_concentration.triggered.disconnect()
+        self.action_concentration.triggered.connect(self.full_mode)
+        self.concshortcut.activated.disconnect()
+        self.concshortcut.activated.connect(self.full_mode)
+
+    def full_mode(self):
+        self.conc_mode = False
+        print('Entering full display free mode')
+        frame_geometry= self.tabWidget.geometry()
+        self.tabWidget.setGeometry(frame_geometry.left()+14,frame_geometry.top()+70,self.tabWidget.geometry().width(),
+                                   self.tabWidget.geometry().height())
+        self.setGeometry(self.left, self.top, self.width, self.height)
+        self.action_concentration.setText('Enter concentration mode')
+        self.action_concentration.triggered.disconnect()
+        self.action_concentration.triggered.connect(self.concentration_mode)
+        self.concshortcut.activated.disconnect()
+        self.concshortcut.activated.connect(self.concentration_mode)
 
     def save(self):
         self.logger.gui_save(self.ui, self.settings)
