@@ -9,7 +9,7 @@ from PyQt5.QtGui import QKeySequence
 from PyQt5.QtCore import QSettings
 from timetracker.logs import Logger
 from timetracker.data import Data
-from timetracker.gui.reports import Reporter
+from timetracker.gui.reports import ReportWidget
 from timetracker.gui.widgets import TodoWidget, TimerWidget, ErrandWidget
 
 class Dashboard(QMainWindow):
@@ -49,10 +49,7 @@ class Dashboard(QMainWindow):
             TodoWidget(todo_groupbox, timescale_data)
             self.errands.append(ErrandWidget(self, scale))
         self.toolbarWidget()
-        self.reportsWidget()
-
-    def test(self):
-        print('dash test')
+        self.reports = ReportWidget(self)
 
     def frame(self):
         self.conc_mode = False
@@ -77,19 +74,6 @@ class Dashboard(QMainWindow):
         self.closeshortcut.activated.connect(self.close)
         self.concshortcut = QShortcut(QKeySequence("Ctrl+M"), self)
         self.concshortcut.activated.connect(self.concentration_mode)
-
-    def reportsWidget(self):
-        self.reports = Reporter(self)
-        self.horizontalLayout_2.addWidget(self.reports)
-        self.reports_groupBox.setLayout(self.horizontalLayout_2)
-        # self.reports.initialize_lineplots()
-        # self.reports.initialize_time_hist()
-        # self.reports.update_time_hist()
-
-    def closeEvent(self, event):
-        self.logger.gui_save(self.ui, self.settings)
-        self.logger.data_save(self.data)
-        event.accept()
 
     def concentration_mode(self):
         self.conc_mode = True
@@ -119,20 +103,14 @@ class Dashboard(QMainWindow):
         self.concshortcut.activated.disconnect()
         self.concshortcut.activated.connect(self.concentration_mode)
 
+    def closeEvent(self, event):
+        self.logger.gui_save(self.ui, self.settings)
+        self.logger.data_save(self.data)
+        event.accept()
+
     def save(self):
         self.logger.gui_save(self.ui, self.settings)
         self.logger.data_save(self.data)
 
     def load(self):
         self.logger.data_load()
-
-    def update_work_time_times(self):
-        now = datetime.now()
-        hour = now.hour+float(now.minute)/60.
-        self.data.work_time_hours = np.append(self.data.work_time_hours, hour)
-        self.data.metrics_history[0] = np.append(self.data.metrics_history[0], self.data.work_time)
-        self.data.metrics_history[1] = np.append(self.data.metrics_history[1], self.data.daily.todo_score)
-        self.data.metrics_history[2] = np.append(self.data.metrics_history[2],
-                                                 (self.data.daily.todo_score/self.data.daily.todo_goal - self.data.work_time/self.data.goal_time)*100)
-        self.reports.update_lineplots()
-        # self.reports.update_time_hist()

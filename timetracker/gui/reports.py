@@ -12,11 +12,11 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QLabel, QPushButton
 from datetime import datetime
 
-class Reporter(QWidget):
+class ReportWidget(QWidget):
     """ A class to display the historical data """
 
     def __init__(self, parent=None, nrows=3, ncols=2):
-        super(Reporter, self).__init__(parent)
+        super(ReportWidget, self).__init__(parent)
 
         self.data = parent.data
         self.start_hour_val = datetime.now().hour if datetime.now().hour > 9 else 9
@@ -64,7 +64,6 @@ class Reporter(QWidget):
         frac_combo.setCurrentText(str(self.frac_hour_val))
         zoom_buttom.setText('Quick Zoom')
 
-
         start_combo.activated[str].connect(self.update_start)
         stop_combo.activated[str].connect(self.update_stop)
         frac_combo.activated[str].connect(self.update_frac)
@@ -85,7 +84,6 @@ class Reporter(QWidget):
 
         self.ims = np.empty((self.nrows, self.ncols), dtype=AxesImage)
 
-        # self.time = time.time()
         self.day_hours = np.arange(self.start_hour_val, self.stop_hour_val, self.frac_hour_val)
         self.actual_day_hours = np.arange(datetime.now().hour+float(datetime.now().minute)/60, 23, 0.25)
         self.ts_hist_loc = [0,1]
@@ -96,6 +94,9 @@ class Reporter(QWidget):
         self.initialize_time_hist()
         self.figure.tight_layout()  # why does this have to be here to not ignore the axis labels?
         self.figure.subplots_adjust(top=0.965, bottom=0.1, left=0.12, right=0.971, hspace=0, wspace=0.28)
+
+        parent.horizontalLayout_2.addWidget(self)
+        parent.reports_groupBox.setLayout(parent.horizontalLayout_2)
 
     def quick_zoom(self):
         xmin, xmax = self.data.work_time_hours[-1] + np.array([-0.5, 0.5])

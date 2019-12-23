@@ -280,9 +280,20 @@ class TimerWidget(QWidget):
                 self.update_pomodoros()
 
             if orig_time//self.dashboard.update_sec != self.time//self.dashboard.update_sec:  # timer transitions past minute mark
-                self.dashboard.update_work_time_times()
+                self.update_work_time_times()
 
         self.display()
+
+    def update_work_time_times(self):
+        now = datetime.now()
+        hour = now.hour+float(now.minute)/60.
+        self.dashboard.data.work_time_hours = np.append(self.dashboard.data.work_time_hours, hour)
+        self.dashboard.data.metrics_history[0] = np.append(self.dashboard.data.metrics_history[0], self.dashboard.data.work_time)
+        self.dashboard.data.metrics_history[1] = np.append(self.dashboard.data.metrics_history[1], self.dashboard.data.daily.todo_score)
+        self.dashboard.data.metrics_history[2] = np.append(self.dashboard.data.metrics_history[2],
+                                                 (self.dashboard.data.daily.todo_score/self.dashboard.data.daily.todo_goal - self.dashboard.data.work_time/self.dashboard.data.goal_time)*100)
+        self.dashboard.reports.update_lineplots()
+        # self.reports.update_time_hist()
 
     def prog_time(self):
         self.dashboard.progressBar_2.setValue(self.dashboard.data.work_time/self.dashboard.data.goal_time * 100)
