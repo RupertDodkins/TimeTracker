@@ -3,19 +3,14 @@
 import os
 import numpy as np
 from datetime import datetime
-from PyQt5.QtCore import pyqtSlot, QTimer, QSettings
-from PyQt5 import Qt, QtCore
 from PyQt5.QtWidgets import QMainWindow, QLabel, QProgressBar, QShortcut
 from PyQt5.uic import loadUi
 from PyQt5.QtGui import QKeySequence
-# import pprint
 from timetracker.logs import Logger
 from timetracker.data import Data
 from timetracker.gui.reports import Reporter
-from timetracker.gui.widgets import TodoWidget
-
-
-TICK_TIME = 2**6  #/100
+from timetracker.gui.widgets import TodoWidget, TimerWidget
+from PyQt5.QtCore import QSettings
 
 class Dashboard(QMainWindow):
     def __init__(self):
@@ -42,10 +37,10 @@ class Dashboard(QMainWindow):
 
     def initialize_gui(self):
         self.frame()
-        self.pomodoroWidget()
-        TodoWidget(self.todo_groupBox, self.data.daily)
-        TodoWidget(self.todo_groupBox_2, self.data.weekly)
-        TodoWidget(self.todo_groupBox_3, self.data.monthly)
+        self.timer = TimerWidget(self)
+        for groupbox, timescale_data in zip([self.todo_groupBox, self.todo_groupBox_2, self.todo_groupBox_3],
+                                            [self.data.daily, self.data.weekly,self.data.monthly]):
+            TodoWidget(groupbox, timescale_data)
         self.errandsWidgets()
         self.toolbarWidget()
         self.reportsWidget()
@@ -59,27 +54,6 @@ class Dashboard(QMainWindow):
         self.width = 1360
         self.height = 825
         self.setGeometry(self.left, self.top, self.width, self.height)
-
-    def pomodoroWidget(self):
-        self.break_mode = False
-        self.pomodoro_duration = 25 * 60  #3
-        self.powerhour_duration = 60*60
-        self.break_duration = 5 * 60
-        self.update_sec = 1
-        self.pause_time = self.pomodoro_duration
-        self.reset.clicked.connect(self.do_reset)
-        self.power.clicked.connect(self.do_longreset)
-        self.start.clicked.connect(self.do_start)
-        self.break_2.clicked.connect(self.do_break)
-        self.timer = QTimer()
-        # self.timer.setInterval(1000)
-        self.timer.setInterval(TICK_TIME)
-        self.timer.setTimerType(QtCore.Qt.PreciseTimer)
-        self.timer.timeout.connect(self.tick)
-        self.do_reset()
-        self.spinBox.valueChanged.connect(self.update_goaltime)
-        self.label_8.setText(str(self.data.pomodoros))
-        self.disp_time()
 
     def errandsWidgets(self):
         for scale in ['daily', 'weekly', 'monthly']:
@@ -169,14 +143,6 @@ class Dashboard(QMainWindow):
     def load(self):
         self.logger.data_load()
 
-    def update_pomodoros(self):
-        self.data.pomodoros += 1
-        self.label_8.setText(str(self.data.pomodoros))
-
-    def update_goaltime(self):
-        self.data.goal_time = self.spinBox.value() * 25 * 60
-        self.reports.update_goals(self.data.goals)
-
     def daily_check_errand(self, text):
         errand_ind = np.where(text == self.data.daily.errands)[0][0]
         self.prog_errand(errand_ind)
@@ -222,12 +188,6 @@ class Dashboard(QMainWindow):
             self.data.weekly.errand_scores[errand_ind] += 100. / errand_amount
             progressbar.setValue(self.data.weekly.errand_scores[errand_ind])
 
-    def prog_time(self):
-        self.progressBar_2.setValue(self.data.work_time/self.data.goal_time * 100)
-
-    def disp_time(self):
-        self.label_4.setText('%d' % (self.data.work_time/60))
-
     def update_work_time_times(self):
         now = datetime.now()
         hour = now.hour+float(now.minute)/60.
@@ -238,90 +198,3 @@ class Dashboard(QMainWindow):
                                                  (self.data.daily.todo_score/self.data.daily.todo_goal - self.data.work_time/self.data.goal_time)*100)
         self.reports.update_lineplots()
         # self.reports.update_time_hist()
-
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Qt.Key_Escape:
-            self.close()
-        else:
-            super().keyPressEvent(event)
-
-    def display(self):
-        if self.time < 0:
-            self.lcd.setDigitCount(6)
-            self.lcd.display("-%d:%.2d" % (abs(self.time) // 60, abs(self.time) % 60))
-        else:
-            self.lcd.setDigitCount(5)
-            self.lcd.display("%d:%.2d" % (self.time // 60, self.time % 60))
-
-    @Qt.pyqtSlot()
-    def tick(self):
-        orig_time = self.time
-
-        self.time -= TICK_TIME / 1000
-
-        delta = datetime.now() - self.timestamp_start
-        delta = delta.total_seconds()
-        if self.break_mode:
-            if np.int(self.time) != self.break_duration - np.int(delta):
-                self.time = self.pause_time - np.int(delta)
-        else:
-            self.data.work_time += TICK_TIME / 1000
-            self.prog_time()
-            self.disp_time()
-
-            if np.int(self.time) != self.pomodoro_duration - np.int(delta):
-                difference = self.time - (self.pause_time - np.int(delta))
-                self.data.work_time += difference
-                self.time = self.pause_time - np.int(delta)
-
-            #todo update to do it on every pmodoro_time interval
-            #something like orig_time % self.pomodoro_time >= 0 and self.time % self.pomodoro_time < 0
-            if orig_time >= 0 and self.time < 0:  # timer transitions below 0
-                self.update_pomodoros()
-
-            if orig_time//self.update_sec != self.time//self.update_sec:  # timer transitions past minute mark
-                self.update_work_time_times()
-
-        self.display()
-
-    @Qt.pyqtSlot()
-    def do_start(self):
-        self.timestamp_start = datetime.now()
-        self.timer.start()
-        self.start.setText("Pause")
-        self.start.clicked.disconnect()
-        self.start.clicked.connect(self.do_pause)
-
-    @Qt.pyqtSlot()
-    def do_pause(self):
-        self.pause_time = self.time
-        self.timer.stop()
-        self.start.setText("Start")
-        self.start.clicked.disconnect()
-        self.start.clicked.connect(self.do_start)
-
-    @Qt.pyqtSlot()
-    def do_reset(self):
-        self.timestamp_start = datetime.now()
-        self.time = self.pomodoro_duration
-        self.pause_time = self.pomodoro_duration
-        self.break_mode = False
-        self.display()
-
-    @Qt.pyqtSlot()
-    def do_longreset(self):
-        self.timestamp_start = datetime.now()
-        self.time = self.powerhour_duration
-        self.pause_time = self.powerhour_duration
-        self.break_mode = False
-        self.display()
-
-    @Qt.pyqtSlot()
-    def do_break(self):
-        self.timestamp_start = datetime.now()
-        self.time = self.break_duration
-        self.pause_time = self.break_duration
-        self.break_mode = True
-        self.display()
-
-
