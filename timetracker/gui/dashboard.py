@@ -1,15 +1,14 @@
-"""GUI functionality"""
+""" GUI functionality """
 
 import os
 import numpy as np
 from datetime import datetime
 from PyQt5.QtCore import pyqtSlot, QTimer, QSettings
 from PyQt5 import Qt, QtCore
-from PyQt5.QtWidgets import QMainWindow, QLabel, QProgressBar, QCheckBox, QTextEdit, QLineEdit, \
-    QPushButton, QVBoxLayout, QHBoxLayout, QShortcut
+from PyQt5.QtWidgets import QMainWindow, QLabel, QProgressBar, QShortcut
 from PyQt5.uic import loadUi
 from PyQt5.QtGui import QKeySequence
-import pprint
+# import pprint
 from timetracker.logs import Logger
 from timetracker.data import Data
 from timetracker.gui.reports import Reporter
@@ -44,9 +43,9 @@ class Dashboard(QMainWindow):
     def initialize_gui(self):
         self.frame()
         self.pomodoroWidget()
-        TodoWidget(self.todo_groupBox, self.data)
-        TodoWidget(self.todo_groupBox_2, self.data)
-        TodoWidget(self.todo_groupBox_3, self.data)
+        TodoWidget(self.todo_groupBox, self.data.daily)
+        TodoWidget(self.todo_groupBox_2, self.data.weekly)
+        TodoWidget(self.todo_groupBox_3, self.data.monthly)
         self.errandsWidgets()
         self.toolbarWidget()
         self.reportsWidget()
@@ -83,7 +82,7 @@ class Dashboard(QMainWindow):
         self.disp_time()
 
     def errandsWidgets(self):
-        for scale in ['daily', 'weekly']:
+        for scale in ['daily', 'weekly', 'monthly']:
             comboBox = getattr(self, f'{scale}_comboBox')
             errands = getattr(self.data, scale).errands
             errands_groupBox = getattr(self, f'{scale}_errands_groupBox')
@@ -188,6 +187,11 @@ class Dashboard(QMainWindow):
         self.prog_weekly_errand(errand_ind)
         self.progressBar_4.setValue(self.data.weekly.errand_score)
 
+    def monthly_check_errand(self, text):
+        errand_ind = np.where(text == self.data.monthly.errands)[0][0]
+        self.prog_weekly_errand(errand_ind)
+        self.progressBar_5.setValue(self.data.monthly.errand_score)
+
     def prog_errand(self, errand_ind):
         progressbar = getattr(self, f"daily_errand_pb_{errand_ind}")
 
@@ -228,12 +232,10 @@ class Dashboard(QMainWindow):
         now = datetime.now()
         hour = now.hour+float(now.minute)/60.
         self.data.work_time_hours = np.append(self.data.work_time_hours, hour)
-        # self.data.work_time_history = np.append(self.data.work_time_history, self.data.work_time)
-        print(self.data.todo_score, 'dash score')
         self.data.metrics_history[0] = np.append(self.data.metrics_history[0], self.data.work_time)
-        self.data.metrics_history[1] = np.append(self.data.metrics_history[1], self.data.todo_score)
+        self.data.metrics_history[1] = np.append(self.data.metrics_history[1], self.data.daily.todo_score)
         self.data.metrics_history[2] = np.append(self.data.metrics_history[2],
-                                                 (self.data.todo_score/self.data.todo_goal - self.data.work_time/self.data.goal_time)*100)
+                                                 (self.data.daily.todo_score/self.data.daily.todo_goal - self.data.work_time/self.data.goal_time)*100)
         self.reports.update_lineplots()
         # self.reports.update_time_hist()
 

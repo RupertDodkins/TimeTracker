@@ -135,7 +135,7 @@ class Reporter(QWidget):
                 ax.yaxis.label.set_color('w')
                 if i == 2:
                     ax.set_xlabel('Clock time (hours)')
-                    ax.set_ylim(-self.data.todo_goal,self.data.todo_goal)
+                    ax.set_ylim(-self.data.daily.todo_goal,self.data.daily.todo_goal)
                 else:
                     plt.setp(ax.get_xticklabels(), visible=False)
 
