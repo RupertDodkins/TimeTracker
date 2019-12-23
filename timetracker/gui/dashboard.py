@@ -45,6 +45,8 @@ class Dashboard(QMainWindow):
         self.frame()
         self.pomodoroWidget()
         TodoWidget(self.todo_groupBox, self.data)
+        TodoWidget(self.todo_groupBox_2, self.data)
+        TodoWidget(self.todo_groupBox_3, self.data)
         self.errandsWidgets()
         self.toolbarWidget()
         self.reportsWidget()

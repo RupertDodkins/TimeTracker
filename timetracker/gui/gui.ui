@@ -27,7 +27,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -461,31 +461,6 @@ logged</string>
       <property name="title">
        <string>To do list</string>
       </property>
-      <widget class="QProgressBar" name="progressBar_5">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>215</y>
-         <width>585</width>
-         <height>30</height>
-        </rect>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>585</width>
-         <height>30</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>585</width>
-         <height>30</height>
-        </size>
-       </property>
-       <property name="value">
-        <number>0</number>
-       </property>
-      </widget>
      </widget>
     </widget>
     <widget class="QWidget" name="tab_4">
@@ -531,31 +506,6 @@ logged</string>
       <property name="title">
        <string>To do list</string>
       </property>
-      <widget class="QProgressBar" name="progressBar_6">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>215</y>
-         <width>585</width>
-         <height>30</height>
-        </rect>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>585</width>
-         <height>30</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>585</width>
-         <height>30</height>
-        </size>
-       </property>
-       <property name="value">
-        <number>0</number>
-       </property>
-      </widget>
      </widget>
     </widget>
    </widget>
