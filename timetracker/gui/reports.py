@@ -163,33 +163,18 @@ class Reporter(QWidget):
                 line.remove()
             ax.collections.clear()
             self.completed_lines[ig],  = ax.plot(self.data.work_time_hours, metric, color=(64./255,173./255,233./255), linewidth=2)
-            # if ig ==2:
-            #     min, max = np.min(metric), np.max(metric)
-            #     ax.set_ylim(min, max)
 
             m = goal/(self.stop_hour_val - self.start_hour_val)
-            # first_goal = m * (self.data.work_time_hours[0]-self.start_hour_val)
             current_goal = m * (self.data.work_time_hours[-1]-self.start_hour_val)
             #todo consistantly filling below goal line and possibly wrong angle too
-            if ig ==0:
-                print(self.stop_hour_val, self.start_hour_val, self.data.work_time_hours[0], self.data.work_time_hours[-1], current_goal, goal, 'current goal')
+            # if ig ==0:
+            #     print(self.stop_hour_val, self.start_hour_val, self.data.work_time_hours[0], self.data.work_time_hours[-1], current_goal, goal, 'current goal')
             self.data.goal_hours[ig].append(current_goal)
 
             # ax.plot(self.data.work_time_hours, self.data.goal_hours[ig])
             ax.fill_between(self.data.work_time_hours, metric, self.data.goal_hours[ig], where=self.data.goal_hours[ig] >= metric,
                             label='Surviving', facecolor='orangered', alpha=0.5,interpolate=True)
-            # poly, _ = ax.fill(self.data.work_time_hours, metric, self.data.goal_hours[ig], facecolor='none')
 
-            # # get the extent of the axes
-            # xmin, xmax = ax.get_xlim()
-            # ymin, ymax = ax.get_ylim()
-            #
-            # # create a dummy image
-            # img_data = np.arange(ymin, ymax, (ymax - ymin) / 100.)
-            # img_data = img_data.reshape(img_data.size, 1)
-            # im = ax.imshow(img_data, aspect='auto', origin='lower', cmap=plt.cm.Reds_r, extent=[xmin, xmax, ymin, ymax],
-            #                vmin=metric.min(), vmax=30.)
-            # im.set_clip_path(poly)
             ax.fill_between(self.data.work_time_hours, metric, self.data.goal_hours[ig], where=self.data.goal_hours[ig] <= metric,
                             label='Thriving', facecolor='springgreen',interpolate=True)
 

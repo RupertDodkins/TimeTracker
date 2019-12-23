@@ -13,6 +13,8 @@ import pprint
 from timetracker.logs import Logger
 from timetracker.data import Data
 from timetracker.gui.reports import Reporter
+from timetracker.gui.widgets import TodoWidget
+
 
 TICK_TIME = 2**6  #/100
 
@@ -42,7 +44,7 @@ class Dashboard(QMainWindow):
     def initialize_gui(self):
         self.frame()
         self.pomodoroWidget()
-        self.todoWidget()
+        TodoWidget(self.todo_groupBox, self.data)
         self.errandsWidgets()
         self.toolbarWidget()
         self.reportsWidget()
@@ -77,153 +79,6 @@ class Dashboard(QMainWindow):
         self.spinBox.valueChanged.connect(self.update_goaltime)
         self.label_8.setText(str(self.data.pomodoros))
         self.disp_time()
-
-    def todoWidget(self):
-
-        self.last_ind = 0
-        self.todo_points = np.zeros((1))
-        self.vbox = QVBoxLayout()
-
-        self.todo_checkBoxs = [QCheckBox()]
-        self.todo_textEdits = [QTextEdit()]
-        self.todo_lineEdits = [QLineEdit()]
-        self.todo_pushButtons = [QPushButton()]
-
-        self.todo_checkBoxs[0].setMinimumSize(20,20)
-        self.todo_checkBoxs[0].setMaximumSize(20,20)
-        self.todo_textEdits[0].setMinimumWidth(400)
-        self.todo_textEdits[0].setMaximumWidth(400)
-        self.todo_lineEdits[0].setMinimumWidth(41)
-        self.todo_lineEdits[0].setMaximumWidth(41)
-        self.todo_lineEdits[0].setText(f'{20}')
-        self.todo_pushButtons[0].setMinimumWidth(46)
-        self.todo_pushButtons[0].setMaximumWidth(46)
-
-        self.todo_pushButtons[0].setText('+')
-
-        self.todo_hBoxs = [QHBoxLayout()]
-        self.todo_hBoxs[0].addWidget(self.todo_checkBoxs[0])
-        self.todo_hBoxs[0].addWidget(self.todo_textEdits[0])
-        self.todo_hBoxs[0].addWidget(self.todo_lineEdits[0])
-        self.todo_hBoxs[0].addWidget(self.todo_pushButtons[0])
-
-        self.todo_checkBoxs[0].stateChanged.connect(self.clickBox_wrapper(0))
-        self.todo_textEdits[0].textChanged.connect(self.update_todo_text)
-        self.todo_lineEdits[0].textChanged.connect(self.score_changed_wrapper(0))
-        self.todo_pushButtons[0].clicked.connect(self.add_todo)
-
-        self.vbox.addLayout(self.todo_hBoxs[0] )
-        self.vbox.addWidget(self.progressBar)
-        self.todo_groupBox.setLayout(self.vbox)
-
-
-    def add_todo(self):
-        this_ind = len(self.todo_hBoxs)
-        self.todo_points = np.append(self.todo_points,0)
-
-        self.todo_checkBoxs = np.append(self.todo_checkBoxs, QCheckBox())
-        self.todo_checkBoxs[this_ind].stateChanged.connect(self.clickBox_wrapper(this_ind))
-        self.todo_checkBoxs[this_ind].setMinimumSize(20,20)
-        self.todo_checkBoxs[this_ind].setMaximumSize(20,20)
-
-        self.todo_textEdits = np.append(self.todo_textEdits, QTextEdit())
-        self.todo_textEdits[this_ind].textChanged.connect(self.update_todo_text)
-        self.todo_textEdits[this_ind].setMinimumWidth(400)
-        self.todo_textEdits[this_ind].setMaximumWidth(400)
-
-        self.todo_lineEdits = np.append(self.todo_lineEdits, QLineEdit())
-        self.todo_lineEdits[this_ind].textChanged.connect(self.score_changed_wrapper(this_ind))
-        self.todo_lineEdits[this_ind].setMinimumWidth(41)
-        self.todo_lineEdits[this_ind].setMaximumWidth(41)
-        self.todo_lineEdits[this_ind].setText(f'{20}')
-
-        self.todo_pushButtons = np.append(self.todo_pushButtons, QPushButton())
-        self.todo_pushButtons[this_ind].setMinimumWidth(46)
-        self.todo_pushButtons[this_ind].setMaximumWidth(46)
-        self.todo_pushButtons[this_ind].setText('x')
-
-        self.todo_hBoxs = np.append(self.todo_hBoxs, QHBoxLayout())
-        self.todo_hBoxs[this_ind].addWidget(self.todo_checkBoxs[this_ind])
-        self.todo_hBoxs[this_ind].addWidget(self.todo_textEdits[this_ind])
-        self.todo_hBoxs[this_ind].addWidget(self.todo_lineEdits[this_ind])
-        self.todo_hBoxs[this_ind].addWidget(self.todo_pushButtons[this_ind])
-
-        self.todo_pushButtons[this_ind].clicked.connect(self.remove_todo_wrapper(this_ind))
-
-        self.vbox.addLayout(self.todo_hBoxs[this_ind])
-
-        self.progressBar.setParent(None)
-        self.progressBar = QProgressBar()
-        self.progressBar.setValue(100*self.data.todo_score/self.data.todo_goal)
-        self.progressBar.setGeometry(0,215,585,30)
-        self.progressBar.setMinimumSize(585,30)
-        self.progressBar.setMaximumSize(585,30)
-        self.vbox.addWidget(self.progressBar)
-        self.todo_groupBox.setLayout(self.vbox)
-
-    def remove_todo_wrapper(self, this_ind):
-        def remove_todo():
-            # remove the hbox contents
-            self.todo_checkBoxs[this_ind].setParent(None)
-            self.todo_textEdits[this_ind].setParent(None)
-            self.todo_lineEdits[this_ind].setParent(None)
-            self.todo_pushButtons[this_ind].setParent(None)
-
-            # delete the element from each list including the hox (row)
-            self.todo_checkBoxs = np.delete(self.todo_checkBoxs, this_ind)
-            self.todo_textEdits = np.delete(self.todo_textEdits, this_ind)
-            self.todo_lineEdits = np.delete(self.todo_lineEdits, this_ind)
-            self.todo_pushButtons = np.delete(self.todo_pushButtons, this_ind)
-            self.todo_hBoxs = np.delete(self.todo_hBoxs, this_ind)
-
-            self.todo_points = np.delete(self.todo_points, this_ind)
-
-            # recalculate everything
-            for ind in range(1,self.last_ind):
-                self.todo_pushButtons[ind].clicked.disconnect()
-                self.todo_pushButtons[ind].clicked.connect(self.remove_todo_wrapper(ind))
-                self.todo_checkBoxs[ind].stateChanged.disconnect()
-                self.todo_checkBoxs[ind].stateChanged.connect(self.clickBox_wrapper(ind))
-                self.todo_lineEdits[ind].textChanged.disconnect()
-                self.todo_lineEdits[ind].textChanged.connect(self.score_changed_wrapper(ind))
-            self.last_ind = len(self.todo_hBoxs) - 1  # first row is 0
-            self.data.todo_score = np.sum(self.todo_points)
-            # self.data.todo_goal = sum([int(lineEdits.text()) for lineEdits in self.todo_lineEdits])
-            self.update_todo_text()
-            self.progressBar.setValue(100 * self.data.todo_score / self.data.todo_goal)
-
-        return remove_todo
-
-    def score_changed_wrapper(self, this_ind):
-        def on_score_changed():
-            if self.todo_checkBoxs[this_ind].isChecked():
-                self.todo_points[this_ind] = self.todo_lineEdits[this_ind].text()
-            self.data.todo_score = np.sum(self.todo_points)
-            # try:
-            #     self.data.todo_goal = sum([int(lineEdits.text()) for lineEdits in self.todo_lineEdits])
-            # except ValueError:
-            #     pass
-        return on_score_changed
-
-    def clickBox_wrapper(self, this_ind):
-        def clickBox(state):
-            if state == QtCore.Qt.Checked:
-                self.add_points(this_ind)
-            else:
-                self.sub_points(this_ind)
-        return clickBox
-
-    def add_points(self, this_ind):
-        self.todo_points[this_ind] = int(self.todo_lineEdits[this_ind].text())
-        self.data.todo_score = np.sum(self.todo_points)
-        # self.data.todo_goal = sum([int(lineEdits.text()) for lineEdits in self.todo_lineEdits])
-        self.progressBar.setValue(100*self.data.todo_score/self.data.todo_goal)
-
-    def sub_points(self, this_ind):
-        self.todo_points[this_ind] = 0
-        self.data.todo_score = np.sum(self.todo_points)
-        # self.data.todo_goal = sum([int(lineEdits.text()) for lineEdits in self.todo_lineEdits])
-        self.progressBar.setValue(100*self.data.todo_score/self.data.todo_goal)
 
     def errandsWidgets(self):
         for scale in ['daily', 'weekly']:
@@ -261,8 +116,8 @@ class Dashboard(QMainWindow):
         self.loadshortcut = QShortcut(QKeySequence("Ctrl+O"), self)
         self.loadshortcut.activated.connect(self.load)
         self.closeshortcut = QShortcut(QKeySequence("Ctrl+D"), self)
-        self.closeshortcut.activated.connect(self.save)
-        self.concshortcut = QShortcut(QKeySequence("Ctrl+C"), self)
+        self.closeshortcut.activated.connect(self.close)
+        self.concshortcut = QShortcut(QKeySequence("Ctrl+M"), self)
         self.concshortcut.activated.connect(self.concentration_mode)
 
     def reportsWidget(self):
@@ -272,9 +127,6 @@ class Dashboard(QMainWindow):
         # self.reports.initialize_lineplots()
         # self.reports.initialize_time_hist()
         # self.reports.update_time_hist()
-
-    def update_todo_text(self):
-        self.data.todos = [textEdit.toPlainText() for textEdit in self.todo_textEdits]
 
     def closeEvent(self, event):
         self.logger.gui_save(self.ui, self.settings)
@@ -375,6 +227,7 @@ class Dashboard(QMainWindow):
         hour = now.hour+float(now.minute)/60.
         self.data.work_time_hours = np.append(self.data.work_time_hours, hour)
         # self.data.work_time_history = np.append(self.data.work_time_history, self.data.work_time)
+        print(self.data.todo_score, 'dash score')
         self.data.metrics_history[0] = np.append(self.data.metrics_history[0], self.data.work_time)
         self.data.metrics_history[1] = np.append(self.data.metrics_history[1], self.data.todo_score)
         self.data.metrics_history[2] = np.append(self.data.metrics_history[2],
@@ -466,4 +319,5 @@ class Dashboard(QMainWindow):
         self.pause_time = self.break_duration
         self.break_mode = True
         self.display()
+
 
