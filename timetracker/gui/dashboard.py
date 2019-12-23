@@ -3,14 +3,14 @@
 import os
 import numpy as np
 from datetime import datetime
-from PyQt5.QtWidgets import QMainWindow, QLabel, QProgressBar, QShortcut
+from PyQt5.QtWidgets import QMainWindow, QShortcut
 from PyQt5.uic import loadUi
 from PyQt5.QtGui import QKeySequence
+from PyQt5.QtCore import QSettings
 from timetracker.logs import Logger
 from timetracker.data import Data
 from timetracker.gui.reports import Reporter
-from timetracker.gui.widgets import TodoWidget, TimerWidget
-from PyQt5.QtCore import QSettings
+from timetracker.gui.widgets import TodoWidget, TimerWidget, ErrandWidget
 
 class Dashboard(QMainWindow):
     def __init__(self):
@@ -38,12 +38,21 @@ class Dashboard(QMainWindow):
     def initialize_gui(self):
         self.frame()
         self.timer = TimerWidget(self)
-        for groupbox, timescale_data in zip([self.todo_groupBox, self.todo_groupBox_2, self.todo_groupBox_3],
-                                            [self.data.daily, self.data.weekly,self.data.monthly]):
-            TodoWidget(groupbox, timescale_data)
-        self.errandsWidgets()
+        #todo neaten this up by making args to TodoWidget and Errandwidget match
+        todo_groupboxes = [self.todo_groupBox, self.todo_groupBox_2, self.todo_groupBox_3]
+        errand_groupboxes = [self.daily_errands_groupBox, self.weekly_errands_groupBox, self.monthly_errands_groupBox]
+        timescale_data = [self.data.daily, self.data.weekly,self.data.monthly]
+        scales = ['daily', 'weekly', 'monthly']
+        self.errands = []
+        for todo_groupbox, errand_groupbox, timescale_data, scale in zip(todo_groupboxes, errand_groupboxes,
+                                                                         timescale_data, scales):
+            TodoWidget(todo_groupbox, timescale_data)
+            self.errands.append(ErrandWidget(self, scale))
         self.toolbarWidget()
         self.reportsWidget()
+
+    def test(self):
+        print('dash test')
 
     def frame(self):
         self.conc_mode = False
@@ -54,32 +63,6 @@ class Dashboard(QMainWindow):
         self.width = 1360
         self.height = 825
         self.setGeometry(self.left, self.top, self.width, self.height)
-
-    def errandsWidgets(self):
-        for scale in ['daily', 'weekly', 'monthly']:
-            comboBox = getattr(self, f'{scale}_comboBox')
-            errands = getattr(self.data, scale).errands
-            errands_groupBox = getattr(self, f'{scale}_errands_groupBox')
-            comboBox.addItems(str(errand) for errand in errands)
-            # num_errands = len(self.data.daily_errands)
-            # num_rows = num_errands//3
-            # comboBox_row = num_rows if num_errands % 3 != 0 else num_rows+1
-            comboBox.setGeometry(390, 125, 200, 31)
-            comboBox.activated[str].connect(getattr(self, f'{scale}_check_errand'))
-            for i in range(len(errands)):
-                row = i //3
-                col = i % 3
-
-                setattr(self, f'{scale}_errands_label_{i}', QLabel(errands_groupBox))
-                setattr(self, f'{scale}_errand_pb_{i}', QProgressBar(errands_groupBox))
-
-                errands_QLabel = getattr(self, f"{scale}_errands_label_{i}")
-                errands_QLabel.setText(str(errands[i]))
-                errands_QLabel.setGeometry(col*200 + 10, row*30 + 30,90,16)
-
-                errands_QProgressBar = getattr(self, f"{scale}_errand_pb_{i}")
-                errands_QProgressBar.setGeometry(col*200 + 110, row*30 + 30,71,20)
-                errands_QProgressBar.setValue(0)
 
     def toolbarWidget(self):
         self.actionSave_2.triggered.connect(self.save)
@@ -142,51 +125,6 @@ class Dashboard(QMainWindow):
 
     def load(self):
         self.logger.data_load()
-
-    def daily_check_errand(self, text):
-        errand_ind = np.where(text == self.data.daily.errands)[0][0]
-        self.prog_errand(errand_ind)
-        self.progressBar_3.setValue(self.data.daily.errand_score)
-
-    def weekly_check_errand(self, text):
-        errand_ind = np.where(text == self.data.weekly.errands)[0][0]
-        self.prog_weekly_errand(errand_ind)
-        self.progressBar_4.setValue(self.data.weekly.errand_score)
-
-    def monthly_check_errand(self, text):
-        errand_ind = np.where(text == self.data.monthly.errands)[0][0]
-        self.prog_weekly_errand(errand_ind)
-        self.progressBar_5.setValue(self.data.monthly.errand_score)
-
-    def prog_errand(self, errand_ind):
-        progressbar = getattr(self, f"daily_errand_pb_{errand_ind}")
-
-        errand_amount = self.data.daily.errand_amounts[errand_ind]
-        errand_complete_yet = self.data.daily.errand_scores[errand_ind] == 100#errand_amount
-
-        if errand_complete_yet:
-            self.data.daily.errand_score -= 100./len(self.data.daily.errands)
-            self.data.daily.errand_scores[errand_ind] =0#-= 100. / errand_amount
-            progressbar.setValue(self.data.daily.errand_scores[errand_ind])
-        else:
-            self.data.daily.errand_score += 100./(len(self.data.daily.errands)*errand_amount)
-            self.data.daily.errand_scores[errand_ind] += 100. / errand_amount
-            progressbar.setValue(self.data.daily.errand_scores[errand_ind])
-
-    def prog_weekly_errand(self, errand_ind):
-        progressbar = getattr(self, f"weekly_errand_pb_{errand_ind}")
-
-        errand_amount = self.data.weekly.errand_amounts[errand_ind]
-        errand_complete_yet = self.data.weekly.errand_scores[errand_ind] == 100#errand_amount
-
-        if errand_complete_yet:
-            self.data.weekly.errand_score -= 100./len(self.data.weekly.errands)
-            self.data.weekly.errand_scores[errand_ind] =0#-= 100. / errand_amount
-            progressbar.setValue(self.data.weekly.errand_scores[errand_ind])
-        else:
-            self.data.weekly.errand_score += 100./(len(self.data.weekly.errands)*errand_amount)
-            self.data.weekly.errand_scores[errand_ind] += 100. / errand_amount
-            progressbar.setValue(self.data.weekly.errand_scores[errand_ind])
 
     def update_work_time_times(self):
         now = datetime.now()

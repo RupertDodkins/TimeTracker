@@ -4,7 +4,7 @@ import numpy as np
 from datetime import datetime
 from PyQt5 import Qt, QtCore
 from PyQt5.QtWidgets import QProgressBar, QCheckBox, QTextEdit, QLineEdit, QPushButton, QVBoxLayout, \
-    QHBoxLayout, QWidget
+    QHBoxLayout, QWidget, QLabel, QComboBox
 from PyQt5.QtCore import QTimer
 
 class TodoWidget():
@@ -289,3 +289,77 @@ class TimerWidget(QWidget):
 
     def disp_time(self):
         self.dashboard.label_4.setText('%d' % (self.dashboard.data.work_time/60))
+
+
+class ErrandWidget(QWidget):
+    def __init__(self, dashboard, scale):
+        super().__init__()
+        self.dashboard = dashboard
+        comboBox = getattr(self.dashboard, f'{scale}_comboBox')
+        errands = getattr(self.dashboard.data, scale).errands
+        errands_groupBox = getattr(self.dashboard, f'{scale}_errands_groupBox')
+        comboBox.addItems(str(errand) for errand in errands)
+        # num_errands = len(self.data.daily_errands)
+        # num_rows = num_errands//3
+        # comboBox_row = num_rows if num_errands % 3 != 0 else num_rows+1
+        comboBox.setGeometry(390, 125, 200, 31)
+        comboBox.activated[str].connect(getattr(self, f'{scale}_check_errand'))
+        for i in range(len(errands)):
+            row = i // 3
+            col = i % 3
+
+            setattr(self.dashboard, f'{scale}_errands_label_{i}', QLabel(errands_groupBox))
+            setattr(self.dashboard, f'{scale}_errand_pb_{i}', QProgressBar(errands_groupBox))
+
+            errands_QLabel = getattr(self.dashboard, f"{scale}_errands_label_{i}")
+            errands_QLabel.setText(str(errands[i]))
+            errands_QLabel.setGeometry(col * 200 + 10, row * 30 + 30, 90, 16)
+
+            errands_QProgressBar = getattr(self.dashboard, f"{scale}_errand_pb_{i}")
+            errands_QProgressBar.setGeometry(col * 200 + 110, row * 30 + 30, 71, 20)
+            errands_QProgressBar.setValue(0)
+
+    def daily_check_errand(self, text):
+        errand_ind = np.where(text == self.dashboard.data.daily.errands)[0][0]
+        self.prog_errand(errand_ind)
+        self.dashboard.progressBar_3.setValue(self.dashboard.data.daily.errand_score)
+
+    def weekly_check_errand(self, text):
+        errand_ind = np.where(text == self.dashboard.data.weekly.errands)[0][0]
+        self.prog_weekly_errand(errand_ind)
+        self.dashboard.progressBar_4.setValue(self.dashboard.data.weekly.errand_score)
+
+    def monthly_check_errand(self, text):
+        errand_ind = np.where(text == self.dashboard.data.monthly.errands)[0][0]
+        self.prog_weekly_errand(errand_ind)
+        self.dashboard.progressBar_5.setValue(self.dashboard.data.monthly.errand_score)
+
+    def prog_errand(self, errand_ind):
+        progressbar = getattr(self.dashboard, f"daily_errand_pb_{errand_ind}")
+
+        errand_amount = self.dashboard.data.daily.errand_amounts[errand_ind]
+        errand_complete_yet = self.dashboard.data.daily.errand_scores[errand_ind] == 100  # errand_amount
+
+        if errand_complete_yet:
+            self.dashboard.data.daily.errand_score -= 100. / len(self.dashboard.data.daily.errands)
+            self.dashboard.data.daily.errand_scores[errand_ind] = 0  # -= 100. / errand_amount
+            progressbar.setValue(self.dashboard.data.daily.errand_scores[errand_ind])
+        else:
+            self.dashboard.data.daily.errand_score += 100. / (len(self.dashboard.data.daily.errands) * errand_amount)
+            self.dashboard.data.daily.errand_scores[errand_ind] += 100. / errand_amount
+            progressbar.setValue(self.dashboard.data.daily.errand_scores[errand_ind])
+
+    def prog_weekly_errand(self, errand_ind):
+        progressbar = getattr(self.dashboard, f"weekly_errand_pb_{errand_ind}")
+
+        errand_amount = self.dashboard.data.weekly.errand_amounts[errand_ind]
+        errand_complete_yet = self.dashboard.data.weekly.errand_scores[errand_ind] == 100  # errand_amount
+
+        if errand_complete_yet:
+            self.dashboard.data.weekly.errand_score -= 100. / len(self.dashboard.data.weekly.errands)
+            self.dashboard.data.weekly.errand_scores[errand_ind] = 0  # -= 100. / errand_amount
+            progressbar.setValue(self.dashboard.data.weekly.errand_scores[errand_ind])
+        else:
+            self.dashboard.data.weekly.errand_score += 100. / (len(self.dashboard.data.weekly.errands) * errand_amount)
+            self.dashboard.data.weekly.errand_scores[errand_ind] += 100. / errand_amount
+            progressbar.setValue(self.dashboard.data.weekly.errand_scores[errand_ind])
