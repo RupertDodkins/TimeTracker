@@ -1,6 +1,33 @@
 """ This module hoasts the Data class used to store the user's scores and settings in gui """
 import numpy as np
 
+class Daily():
+    """ Daily data read by Data """
+    def __init__(self):
+        self.errand_score = 0
+        self.errands = np.array(['Drink water x3', 'Meditate', 'Tidy desk', 'Tidy room',
+                                       'NN', 'Update YNAB', 'Floss x2', 'Email to zero', 'In before 9.30am',
+                                       'Phone Mum'])
+        self.errand_amounts = np.ones(len(self.errands))
+        self.errand_amounts[self.errands == 'Drink water x3'] = 3.  # np.array([3.,1,1,1,1,1,2,1,1])
+        self.errand_amounts[self.errands == 'Floss x2'] = 2
+        self.errand_scores = np.zeros_like((self.errand_amounts))
+
+class Weekly():
+    """ Weekly data read by Data """
+    def __init__(self):
+        self.errand_score = 0
+        self.errands = np.array(
+            ['Gym', 'Gymnastics x3', 'Read paper', 'Get nice plot', 'Meal prep', 'Laundry x4'])
+        self.errand_amounts = np.array([1, 3., 1, 1, 1, 4.])
+        self.errand_scores = np.zeros_like((self.errand_amounts))
+
+class Monthly():
+    """ Placeholder for now """
+    def __init__(self):
+        pass
+
+
 class Data():
     """ A class to store the data relevant for reports """
 
@@ -28,16 +55,8 @@ class Data():
         self.metrics_history = [[], [], []]
         self.ylabels = ['Time worked (s)', 'Impact', 'Efficiency']
 
-        self.daily_errand_score = 0
-        self.daily_errands = np.array(['Drink water x3', 'Meditate', 'Tidy desk', 'Tidy room',
-                              'NN', 'Update YNAB', 'Floss x2', 'Email to zero', 'In before 9.30am', 'Phone Mum'])
-        self.daily_errand_amounts = np.ones(len(self.daily_errands))
-        self.daily_errand_amounts[self.daily_errands=='Drink water x3']=3.#np.array([3.,1,1,1,1,1,2,1,1])
-        self.daily_errand_amounts[self.daily_errands=='Floss x2']=2
-        self.daily_errand_scores = np.zeros_like((self.daily_errand_amounts))
+        self.daily = Daily()
+        self.weekly = Weekly()
+        self.monthly = Monthly()
 
-        self.weekly_errand_score = 0
-        self.weekly_errands = np.array(['Gym', 'Gymnastics x3', 'Read paper', 'Get nice plot', 'Meal prep', 'Laundry x4'])
-        self.weekly_errand_amounts = np.array([1,3.,1,1,1,4.])
-        self.weekly_errand_scores = np.zeros_like((self.weekly_errand_amounts))
 
