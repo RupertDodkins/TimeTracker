@@ -59,7 +59,7 @@ class Data():
 
         self.work_time = 0.
         self.pomodoros = 0
-        self.goal_time = 8 * 25 * 60
+        self.goal_time = 7 * 25 * 60
         self.pomodoro_times = []
         self.work_time_hours = []
         self.work_time_history = np.array([])
@@ -70,6 +70,9 @@ class Data():
         self.goal_hours = [[],[],[]]
         self.start_goals = [0, 0, self.efficiency_goal]
         self.metrics_history = [[], [], []]
+        self.metric_bins = [np.linspace(self.start_goals[0],self.goals[0],100),
+                            np.linspace(self.start_goals[1],self.goals[1],100),
+                            np.linspace(self.goals[2]-100,self.goals[2]+100,100) ]
         self.ylabels = ['Time worked (s)', 'Impact', 'Efficiency']
 
 

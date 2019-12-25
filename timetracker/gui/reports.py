@@ -19,9 +19,10 @@ class ReportWidget(QWidget):
         super(ReportWidget, self).__init__(parent)
 
         self.data = parent.data
+        self.ncols = ncols
         self.start_hour_val = datetime.now().hour if datetime.now().hour > 9 else 9
         self.stop_hour_val = 24 if datetime.now().hour >= 17 else 17
-        self.frac_hour_val = 0.25
+        self.frac_hour_val = 0.125
 
         self.nrows, self.ncols = nrows, ncols
         self.facecolor = (49./255,54./255,59./255)
@@ -36,10 +37,13 @@ class ReportWidget(QWidget):
 
         for r in range(self.nrows):
             for c in range(self.ncols):
-                if r == 0 and c == 0:
-                    ax0 = self.figure.add_subplot(gs[r,c])
+                if r==0 and c==0:
+                    ax0 = self.figure.add_subplot(gs[0, 0])
+                elif c == 0:
+                    self.figure.add_subplot(gs[r,c], sharex = ax0)
                 else:
-                    ax = self.figure.add_subplot(gs[r,c], sharex = ax0)
+                    self.figure.add_subplot(gs[r, c])
+
 
         self.axes = np.array(self.figure.axes).reshape(self.nrows, self.ncols)
         self.cax = []
@@ -88,10 +92,10 @@ class ReportWidget(QWidget):
         self.actual_day_hours = np.arange(datetime.now().hour+float(datetime.now().minute)/60, 23, 0.25)
         self.ts_hist_loc = [0,1]
         self.completed_lines = [None, None, None]
+        self.completed_hists = [None, None, None]
         self.ts_hist = None
 
-        self.initialize_lineplots()
-        self.initialize_time_hist()
+        self.initialize_plots()
         self.figure.tight_layout()  # why does this have to be here to not ignore the axis labels?
         self.figure.subplots_adjust(top=0.965, bottom=0.1, left=0.12, right=0.971, hspace=0, wspace=0.28)
 
@@ -121,32 +125,35 @@ class ReportWidget(QWidget):
         self.day_hours = np.arange(self.start_hour_val, self.stop_hour_val, self.frac_hour_val)
         self.update_goals(self.data.goals)
 
-    def initialize_lineplots(self):
+    def initialize_plots(self):
         self.goal_lines = []
         # import matplotlib
-        for y in range(2):
+        for y in range(self.ncols):
             axes = self.axes[:,y]
             for i, start, goal, ax, ylabel in zip(range(len(self.data.goals)), self.data.start_goals, self.data.goals,
                                                   axes, self.data.ylabels):
 
-                ax.tick_params(color='w', labelcolor='w')
+                ax.tick_params(direction='in', color='w', labelcolor='w')
                 for spine in ax.spines.values():
                     spine.set_edgecolor('w')
                 ax.xaxis.label.set_color('w')
                 ax.yaxis.label.set_color('w')
-                if i == 2:
+                ax.set_facecolor(self.facecolor)
+                if i == 2 and y ==0:
                     ax.set_xlabel('Clock time (hours)')
                     ax.set_ylim(-self.data.daily.todo_goal,self.data.daily.todo_goal)
-                else:
+                if i < 2:# and y == 0:
                     plt.setp(ax.get_xticklabels(), visible=False)
 
                 if y==0:
                     goal_steps = np.linspace(start, goal, len(self.day_hours))  # factor of 3600 will be from here
                     self.goal_lines.append(ax.plot(self.day_hours, goal_steps, linestyle='--', color='w', linewidth=2))
                     ax.set_ylabel(ylabel)
-                else:
-                    ax.set_ylabel('Amount')
-                ax.set_facecolor(self.facecolor)
+                if i ==2 and y ==1:
+                    ax.set_xlabel('Amount')
+                if y ==1:
+                    plt.setp(ax.get_yticklabels(), visible=False)
+
                 # ax.legend()
 
     def update_goals(self, goals):
@@ -183,15 +190,15 @@ class ReportWidget(QWidget):
             # line.pop(0).remove()
             # plt.show(block=True)
 
-    def initialize_time_hist(self):
-        # self.axes[self.ts_hist_loc[0],self.ts_hist_loc[1]].set_xlabel('Clock time (hours)')
-        self.axes[self.ts_hist_loc[0],self.ts_hist_loc[1]].set_ylabel('Amount')
-
     def update_time_hist(self):
         # print(self.data.work_time_history)
         # print(np.histogram(self.data.work_time_history/3600, bins=self.day_hours))
-        if self.ts_hist is not None:
-            [b.remove() for b in self.ts_hist]
-        _, _, self.ts_hist = self.axes[self.ts_hist_loc[0],self.ts_hist_loc[1]].hist(self.data.work_time_hours, bins=self.day_hours, color='b')
-        self.canvas.draw()
+        for ig, hist, ax, metric, bins in zip(range(len(self.data.goals)), self.completed_hists, self.axes[:,1],
+                                        self.data.metrics_history, self.data.metric_bins):
+            if hist is not None:
+                [b.remove() for b in hist]
+            ax.collections.clear()
+            _, _, self.completed_hists[ig] = ax.hist(metric, bins=bins,
+                                                     color=(64./255,173./255,233./255), orientation='horizontal')
+            self.canvas.draw()
         # hist.pop(0).remove()

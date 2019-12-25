@@ -293,7 +293,7 @@ class TimerWidget(QWidget):
         self.dashboard.data.metrics_history[2] = np.append(self.dashboard.data.metrics_history[2],
                                                  (self.dashboard.data.daily.todo_score/self.dashboard.data.daily.todo_goal - self.dashboard.data.work_time/self.dashboard.data.goal_time)*100)
         self.dashboard.reports.update_lineplots()
-        # self.reports.update_time_hist()
+        self.dashboard.reports.update_time_hist()
 
     def prog_time(self):
         self.dashboard.progressBar_2.setValue(self.dashboard.data.work_time/self.dashboard.data.goal_time * 100)
