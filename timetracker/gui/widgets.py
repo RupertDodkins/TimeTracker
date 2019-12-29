@@ -125,7 +125,6 @@ class TodoWidget():
                 self.lineEdits[ind].textChanged.connect(self.score_changed_wrapper(ind))
             self.last_ind = len(self.hBoxs) - 1  # first row is 0
             self.timescale_data.todo_score = np.sum(self.points)
-            print(self.timescale_data.todo_score, self.timescale_data.todo_score, 'score')
             # self.timescale_data.todo_goal = sum([int(lineEdits.text()) for lineEdits in self.lineEdits])
             self.update_text()
             self.progressBar.setValue(100 * self.timescale_data.todo_score / self.timescale_data.todo_goal)
@@ -170,18 +169,19 @@ class TodoWidget():
 class TimerWidget(QWidget):
     """ A class to display the historical data """
 
-    TICK_TIME = 2 ** 6  # /100
+    TICK_TIME = 1  # 2 ** 6
 
     def __init__(self, dashboard):
         super().__init__()
         self.dashboard = dashboard
+        self.correct_lag = True
 
         self.break_mode = False
         self.pomodoro_duration = 25 * 60  # 3
         self.powerhour_duration = 60 * 60
         self.break_duration = 5 * 60
         self.dashboard.update_sec = 1
-        self.dashboard.pause_time = self.pomodoro_duration
+        self.pause_time = self.pomodoro_duration
         # self.reset = QPushButton('PyQt5 button', self)
         self.dashboard.reset.clicked.connect(self.do_reset)
         self.dashboard.power.clicked.connect(self.do_longreset)
@@ -189,7 +189,7 @@ class TimerWidget(QWidget):
         self.dashboard.break_2.clicked.connect(self.do_break)
         self.timer = QTimer()
         # self.timer.setInterval(1000)
-        self.timer.setInterval(self.TICK_TIME)
+        # self.timer.setInterval(self.TICK_TIME)
         self.timer.setTimerType(QtCore.Qt.PreciseTimer)
         self.timer.timeout.connect(self.tick)
         self.do_reset()
@@ -212,6 +212,11 @@ class TimerWidget(QWidget):
         self.dashboard.start.setText("Pause")
         self.dashboard.start.clicked.disconnect()
         self.dashboard.start.clicked.connect(self.do_pause)
+        # if the code is puased and then unpaused update the final value of worktimehours
+        if len(self.dashboard.data.work_time_hours) > 0:
+            hour = self.timestamp_start.hour + self.timestamp_start.minute / 60. + self.timestamp_start.second / 3600
+            self.dashboard.data.work_time_hours[-1] = hour
+            print('unpausings', hour)
 
     @Qt.pyqtSlot()
     def do_pause(self):
@@ -269,7 +274,7 @@ class TimerWidget(QWidget):
             self.prog_time()
             self.disp_time()
 
-            if np.int(self.time) != self.pomodoro_duration - np.int(delta):
+            if self.correct_lag and np.int(self.time) != self.pomodoro_duration - np.int(delta):
                 difference = self.time - (self.pause_time - np.int(delta))
                 self.dashboard.data.work_time += difference
                 self.time = self.pause_time - np.int(delta)
@@ -279,20 +284,32 @@ class TimerWidget(QWidget):
             if orig_time >= 0 and self.time < 0:  # timer transitions below 0
                 self.update_pomodoros()
 
-            if orig_time//self.dashboard.update_sec != self.time//self.dashboard.update_sec:  # timer transitions past minute mark
-                self.update_work_time_times()
+            if orig_time//self.dashboard.update_sec != self.time//self.dashboard.update_sec:  # timer transitions past second mark
+                diff_sec = orig_time//self.dashboard.update_sec - self.time//self.dashboard.update_sec
+                self.update_work_time_times(int(np.round(diff_sec)))
 
         self.display()
 
-    def update_work_time_times(self):
+    def update_work_time_times(self, diff_sec):
         now = datetime.now()
-        hour = now.hour+float(now.minute)/60.
-        self.dashboard.data.work_time_hours = np.append(self.dashboard.data.work_time_hours, hour)
-        self.dashboard.data.metrics_history[0] = np.append(self.dashboard.data.metrics_history[0], self.dashboard.data.work_time)
-        self.dashboard.data.metrics_history[1] = np.append(self.dashboard.data.metrics_history[1], self.dashboard.data.daily.todo_score)
+        hour = now.hour+float(now.minute)/60. + now.second/3600
+
+        if len(self.dashboard.data.work_time_hours) != 0:
+            hours = np.linspace(self.dashboard.data.work_time_hours[-1], hour, diff_sec+1)[1:]
+            work_times = np.linspace(self.dashboard.data.metrics_history[0][-1], self.dashboard.data.work_time, diff_sec+1)[1:]
+            todo_scores = np.ones((diff_sec))*self.dashboard.data.daily.todo_score
+            # print(np.round(diff_sec), self.dashboard.data.work_time_hours[-1], hour, hours)
+        else:
+            hours = hour
+            work_times = self.dashboard.data.work_time
+            todo_scores = self.dashboard.data.daily.todo_score
+        self.dashboard.data.work_time_hours = np.append(self.dashboard.data.work_time_hours, hours)
+        self.dashboard.data.metrics_history[0] = np.append(self.dashboard.data.metrics_history[0], work_times)
+        self.dashboard.data.metrics_history[1] = np.append(self.dashboard.data.metrics_history[1], todo_scores)
         self.dashboard.data.metrics_history[2] = np.append(self.dashboard.data.metrics_history[2],
-                                                 (self.dashboard.data.daily.todo_score/self.dashboard.data.daily.todo_goal - self.dashboard.data.work_time/self.dashboard.data.goal_time)*100)
-        self.dashboard.reports.update_lineplots()
+                                                           (todo_scores/self.dashboard.data.daily.todo_goal
+                                                            - work_times/self.dashboard.data.goal_time)*100)
+        self.dashboard.reports.update_lineplots(diff_sec)
         self.dashboard.reports.update_time_hist()
 
     def prog_time(self):

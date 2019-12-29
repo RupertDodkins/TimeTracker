@@ -27,13 +27,10 @@ class ReportWidget(QWidget):
         self.nrows, self.ncols = nrows, ncols
         self.facecolor = (49./255,54./255,59./255)
         self.figure = Figure(figsize=(4*ncols,3*nrows), facecolor=self.facecolor)
-        # self.figure.subplots_adjust(left=0.175, bottom=0.1, right=0.89, top=0.9, wspace=0.005, hspace=0.2)
-
-        # self.canvas = FigureCanvasQTAgg(self.figure)
         self.canvas = FigureCanvas(self.figure)
         self.toolbar = NavigationToolbar(self.canvas, self)
 
-        gs = gridspec.GridSpec(self.nrows, self.ncols)
+        gs = gridspec.GridSpec(self.nrows, self.ncols, width_ratios=[3, 1], wspace=0.05)
 
         for r in range(self.nrows):
             for c in range(self.ncols):
@@ -88,7 +85,8 @@ class ReportWidget(QWidget):
 
         self.ims = np.empty((self.nrows, self.ncols), dtype=AxesImage)
 
-        self.day_hours = np.arange(self.start_hour_val, self.stop_hour_val, self.frac_hour_val)
+        self.num_hours = (self.stop_hour_val-self.start_hour_val)/self.frac_hour_val
+        self.day_hours = np.linspace(self.start_hour_val, self.stop_hour_val, self.num_hours)  #use linspace instead of arange to include the final value
         self.actual_day_hours = np.arange(datetime.now().hour+float(datetime.now().minute)/60, 23, 0.25)
         self.ts_hist_loc = [0,1]
         self.completed_lines = [None, None, None]
@@ -112,17 +110,18 @@ class ReportWidget(QWidget):
 
     def update_start(self, text):
         self.start_hour_val = int(text)
-        self.day_hours = np.arange(self.start_hour_val, self.stop_hour_val, self.frac_hour_val)
+        self.day_hours = np.linspace(self.start_hour_val, self.stop_hour_val, self.num_hours)
         self.update_goals(self.data.goals)
 
     def update_stop(self, text):
         self.stop_hour_val = int(text)
-        self.day_hours = np.arange(self.start_hour_val, self.stop_hour_val, self.frac_hour_val)
+        self.day_hours = np.linspace(self.start_hour_val, self.stop_hour_val, self.num_hours)
         self.update_goals(self.data.goals)
 
     def update_frac(self, text):
         self.frac_hour_val = float(text)
-        self.day_hours = np.arange(self.start_hour_val, self.stop_hour_val, self.frac_hour_val)
+        self.num_hours = (self.stop_hour_val - self.start_hour_val) / self.frac_hour_val
+        self.day_hours = np.linspace(self.start_hour_val, self.stop_hour_val, self.num_hours)
         self.update_goals(self.data.goals)
 
     def initialize_plots(self):
@@ -157,42 +156,48 @@ class ReportWidget(QWidget):
                 # ax.legend()
 
     def update_goals(self, goals):
-        for ig, line, start, goal, ax in zip(range(len(self.data.goals)), self.goal_lines, self.data.start_goals, goals, self.axes[:,0]):
+        for ig, line, start, goal, ax in zip(range(len(self.data.goals)), self.goal_lines,
+                                             self.data.start_goals, goals, self.axes[:,0]):
             line.pop(0).remove()
             self.data.goals[ig] = goal
             goal_steps = np.linspace(start, goal, len(self.day_hours))  #factor of 3600 will be from here
             ax.set_ylim(0,goal)
             self.goal_lines[ig] = ax.plot(self.day_hours, goal_steps, linestyle='--', color='k')
 
-    def update_lineplots(self):
+    def update_lineplots(self, diff_sec):
+        """
+        During each TimerWidget.tick a (or several) data point(s) are added to the plots
+
+        Parameters
+        ----------
+        diff_sec : int
+                   the number of seconds since the code last updated (because of mac background mode)
+        """
         for ig, line, ax, goal, metric in zip(range(len(self.data.goals)), self.completed_lines, self.axes[:,0],
                                                self.data.goals, self.data.metrics_history):
             if line is not None:
                 line.remove()
             ax.collections.clear()
-            self.completed_lines[ig],  = ax.plot(self.data.work_time_hours, metric, color=(64./255,173./255,233./255), linewidth=2)
+            self.completed_lines[ig],  = ax.plot(self.data.work_time_hours, metric, color=(64./255,173./255,233./255),
+                                                 linewidth=2)
 
             m = goal/(self.stop_hour_val - self.start_hour_val)
-            current_goal = m * (self.data.work_time_hours[-1]-self.start_hour_val)
-            #todo consistantly filling below goal line and possibly wrong angle too
-            # if ig ==0:
-            #     print(self.stop_hour_val, self.start_hour_val, self.data.work_time_hours[0], self.data.work_time_hours[-1], current_goal, goal, 'current goal')
-            self.data.goal_hours[ig].append(current_goal)
+            current_goal = m * (self.data.work_time_hours[-diff_sec:]-self.start_hour_val)
+            print(self.data.work_time_hours[-diff_sec:], current_goal)
 
-            # ax.plot(self.data.work_time_hours, self.data.goal_hours[ig])
-            ax.fill_between(self.data.work_time_hours, metric, self.data.goal_hours[ig], where=self.data.goal_hours[ig] >= metric,
-                            label='Surviving', facecolor='orangered', alpha=0.5,interpolate=True)
+            self.data.goal_hours[ig] = np.append(self.data.goal_hours[ig], current_goal)
 
-            ax.fill_between(self.data.work_time_hours, metric, self.data.goal_hours[ig], where=self.data.goal_hours[ig] <= metric,
-                            label='Thriving', facecolor='springgreen',interpolate=True)
+            ax.fill_between(self.data.work_time_hours, metric, self.data.goal_hours[ig],
+                            where=self.data.goal_hours[ig] >= metric, facecolor='orangered', alpha=0.5,
+                            interpolate=True)
+
+            ax.fill_between(self.data.work_time_hours, metric, self.data.goal_hours[ig],
+                            where=self.data.goal_hours[ig] <= metric, facecolor='springgreen', alpha=0.5,
+                            interpolate=True)
 
             self.canvas.draw()
-            # line.pop(0).remove()
-            # plt.show(block=True)
 
     def update_time_hist(self):
-        # print(self.data.work_time_history)
-        # print(np.histogram(self.data.work_time_history/3600, bins=self.day_hours))
         for ig, hist, ax, metric, bins in zip(range(len(self.data.goals)), self.completed_hists, self.axes[:,1],
                                         self.data.metrics_history, self.data.metric_bins):
             if hist is not None:
@@ -201,4 +206,4 @@ class ReportWidget(QWidget):
             _, _, self.completed_hists[ig] = ax.hist(metric, bins=bins,
                                                      color=(64./255,173./255,233./255), orientation='horizontal')
             self.canvas.draw()
-        # hist.pop(0).remove()
+
