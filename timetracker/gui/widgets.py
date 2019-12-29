@@ -181,7 +181,7 @@ class TimerWidget(QWidget):
         self.powerhour_duration = 60 * 60
         self.break_duration = 5 * 60
         self.dashboard.update_sec = 1
-        self.dashboard.update_min = 60
+        self.dashboard.update_delay = 5
         self.pause_time = self.pomodoro_duration
         # self.reset = QPushButton('PyQt5 button', self)
         self.dashboard.reset.clicked.connect(self.do_reset)
@@ -289,8 +289,8 @@ class TimerWidget(QWidget):
                 diff_sec = orig_time//self.dashboard.update_sec - self.time//self.dashboard.update_sec
                 self.update_work_time_times(int(np.round(diff_sec)))
 
-            # if orig_time//self.dashboard.update_min != self.time//self.dashboard.update_min:
-            #     self.dashboard.reports.update_time_hist()
+            if orig_time//self.dashboard.update_delay != self.time//self.dashboard.update_delay:
+                self.dashboard.reports.update_time_hist()
 
         self.display()
 
@@ -314,7 +314,7 @@ class TimerWidget(QWidget):
                                                            (todo_scores/self.dashboard.data.daily.todo_goal
                                                             - work_times/self.dashboard.data.goal_time)*100)
         self.dashboard.reports.update_lineplots(diff_sec)
-        self.dashboard.reports.update_time_hist()
+        # self.dashboard.reports.update_time_hist()
 
     def prog_time(self):
         self.dashboard.progressBar_2.setValue(self.dashboard.data.work_time/self.dashboard.data.goal_time * 100)

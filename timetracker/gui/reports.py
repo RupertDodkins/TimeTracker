@@ -185,7 +185,7 @@ class ReportWidget(QWidget):
             current_goal = m * (self.data.work_time_hours[-(diff_sec+1):]-self.start_hour_val)
             self.data.goal_hours[ig] = np.append(self.data.goal_hours[ig][:-1], current_goal)
 
-            ax.plot(self.data.work_time_hours, self.data.goal_hours[ig], color='orange', marker='o')
+            # ax.plot(self.data.work_time_hours, self.data.goal_hours[ig], color='orange', marker='o')
 
             ax.fill_between(self.data.work_time_hours, metric, self.data.goal_hours[ig],
                             where=self.data.goal_hours[ig] >= metric, facecolor='orangered',
@@ -206,34 +206,36 @@ class ReportWidget(QWidget):
             ax.collections.clear()
 
             #todo make not slow by only operating on the current bin
-            # start = time.time()
+
             # now = datetime.now()
             # current_bin = now.hour+now.minute/60+now.second/3600 == bins
             # print(current_bin)
-            #
-            # start = time.time()
             # where_thrive = self.data.goal_hours[ig] <= metric
-            # end = time.time()
-            # print(ig, end - start)
-            #
-            # start = time.time()
             # metric_heights, _ = np.histogram(metric, bins=bins)
-            # end = time.time()
-            # print(ig, end - start)
-            #
-            # start = time.time()
             # survive_heights, thrive_heights = np.array(
             #     [(sum(b == False), sum(b == True)) for b in np.split(where_thrive, np.cumsum(metric_heights))]).T
-            # end = time.time()
-            # print(ig, end - start)
-            #
-            # start = time.time()
             # self.completed_hists[ig][0] = ax.barh(bins, thrive_heights, height=2, color='springgreen')
             # self.completed_hists[ig][1] = ax.barh(bins, survive_heights, left=thrive_heights, height=2, color='orangered')
+
+            start = time.time()
+            where_thrive = self.data.goal_hours[ig] <= metric
+            thrive = metric[where_thrive]
+            survive = metric[~where_thrive]
+            end = time.time()
+            print(ig, end - start)
+
+            start = time.time()
+            colors = ['springgreen', 'orangered']
+            _, _, self.completed_hists[ig] = ax.hist([thrive, survive], bins=bins,
+                                                     color=colors, orientation='horizontal', stacked=True)
+            end = time.time()
+            print(ig, end - start)
+
+            # start = time.time()
+            # _, _, self.completed_hists[ig] = ax.hist(metric, bins=bins,
+            #                                          color=(64./255,173./255,233./255), orientation='horizontal')
             # end = time.time()
             # print(ig, end - start)
 
-            _, _, self.completed_hists[ig] = ax.hist(metric, bins=bins,
-                                                     color=(64./255,173./255,233./255), orientation='horizontal')
             self.canvas.draw()
 
