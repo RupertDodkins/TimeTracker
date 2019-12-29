@@ -11,6 +11,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QLabel, QPushButton
 from datetime import datetime
+import time
 
 class ReportWidget(QWidget):
     """ A class to display the historical data """
@@ -22,7 +23,7 @@ class ReportWidget(QWidget):
         self.ncols = ncols
         self.start_hour_val = datetime.now().hour if datetime.now().hour > 9 else 9
         self.stop_hour_val = 24 if datetime.now().hour >= 17 else 17
-        self.frac_hour_val = 0.125
+        self.frac_hour_val = 0.5#0.125
 
         self.nrows, self.ncols = nrows, ncols
         self.facecolor = (49./255,54./255,59./255)
@@ -90,7 +91,7 @@ class ReportWidget(QWidget):
         self.actual_day_hours = np.arange(datetime.now().hour+float(datetime.now().minute)/60, 23, 0.25)
         self.ts_hist_loc = [0,1]
         self.completed_lines = [None, None, None]
-        self.completed_hists = [[None, None, None],[None, None, None]]
+        self.completed_hists = [[None, None], [None, None],[None, None]]
         self.ts_hist = None
 
         self.initialize_plots()
@@ -181,15 +182,17 @@ class ReportWidget(QWidget):
                                                  linewidth=2)
 
             m = goal/(self.stop_hour_val - self.start_hour_val)
-            current_goal = m * (self.data.work_time_hours[-diff_sec:]-self.start_hour_val)
-            self.data.goal_hours[ig] = np.append(self.data.goal_hours[ig], current_goal)
+            current_goal = m * (self.data.work_time_hours[-(diff_sec+1):]-self.start_hour_val)
+            self.data.goal_hours[ig] = np.append(self.data.goal_hours[ig][:-1], current_goal)
+
+            ax.plot(self.data.work_time_hours, self.data.goal_hours[ig], color='orange', marker='o')
 
             ax.fill_between(self.data.work_time_hours, metric, self.data.goal_hours[ig],
-                            where=self.data.goal_hours[ig] >= metric, facecolor='orangered', alpha=0.5,
+                            where=self.data.goal_hours[ig] >= metric, facecolor='orangered',
                             interpolate=True)
 
             ax.fill_between(self.data.work_time_hours, metric, self.data.goal_hours[ig],
-                            where=self.data.goal_hours[ig] <= metric, facecolor='springgreen', alpha=0.5,
+                            where=self.data.goal_hours[ig] <= metric, facecolor='springgreen',
                             interpolate=True)
 
             self.canvas.draw()
@@ -198,20 +201,37 @@ class ReportWidget(QWidget):
         for ig, hist, ax, metric, bins in zip(range(len(self.data.goals)), self.completed_hists, self.axes[:,1],
                                         self.data.metrics_history, self.data.metric_bins):
 
-            if None not in hist:
+            if not None in hist:
                 [b.remove() for b in hist]
             ax.collections.clear()
 
-            #todo make not slow
+            #todo make not slow by only operating on the current bin
+            # start = time.time()
+            # now = datetime.now()
+            # current_bin = now.hour+now.minute/60+now.second/3600 == bins
+            # print(current_bin)
+            #
+            # start = time.time()
             # where_thrive = self.data.goal_hours[ig] <= metric
+            # end = time.time()
+            # print(ig, end - start)
             #
+            # start = time.time()
             # metric_heights, _ = np.histogram(metric, bins=bins)
+            # end = time.time()
+            # print(ig, end - start)
             #
+            # start = time.time()
             # survive_heights, thrive_heights = np.array(
             #     [(sum(b == False), sum(b == True)) for b in np.split(where_thrive, np.cumsum(metric_heights))]).T
+            # end = time.time()
+            # print(ig, end - start)
             #
-            # self.completed_hists[0][ig] = ax.barh(bins, thrive_heights, color='springgreen', alpha=0.5)
-            # self.completed_hists[1][ig] = ax.barh(bins, survive_heights, left=thrive_heights, color='orangered', alpha=0.5)
+            # start = time.time()
+            # self.completed_hists[ig][0] = ax.barh(bins, thrive_heights, height=2, color='springgreen')
+            # self.completed_hists[ig][1] = ax.barh(bins, survive_heights, left=thrive_heights, height=2, color='orangered')
+            # end = time.time()
+            # print(ig, end - start)
 
             _, _, self.completed_hists[ig] = ax.hist(metric, bins=bins,
                                                      color=(64./255,173./255,233./255), orientation='horizontal')

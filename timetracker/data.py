@@ -12,8 +12,8 @@ class Daily():
 
         self.errand_score = 0
         self.errands = np.array(['Drink water x3', 'Meditate', 'Tidy desk', 'Tidy room',
-                                 'NN', 'Update YNAB', 'Floss x2', 'Email to zero', 'In before 9.30am',
-                                 'Phone Mum'])
+                                 'NN', 'Update YNAB', 'Floss x2', 'Email to zero', 'In by 9.30am',
+                                 'Phone Mum', 'No YouTube', 'No GUI code'])
         self.errand_amounts = np.ones(len(self.errands))
         self.errand_amounts[self.errands == 'Drink water x3'] = 3.  # np.array([3.,1,1,1,1,1,2,1,1])
         self.errand_amounts[self.errands == 'Floss x2'] = 2

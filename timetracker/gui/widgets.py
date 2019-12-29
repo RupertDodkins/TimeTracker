@@ -181,6 +181,7 @@ class TimerWidget(QWidget):
         self.powerhour_duration = 60 * 60
         self.break_duration = 5 * 60
         self.dashboard.update_sec = 1
+        self.dashboard.update_min = 60
         self.pause_time = self.pomodoro_duration
         # self.reset = QPushButton('PyQt5 button', self)
         self.dashboard.reset.clicked.connect(self.do_reset)
@@ -287,6 +288,9 @@ class TimerWidget(QWidget):
             if orig_time//self.dashboard.update_sec != self.time//self.dashboard.update_sec:  # timer transitions past second mark
                 diff_sec = orig_time//self.dashboard.update_sec - self.time//self.dashboard.update_sec
                 self.update_work_time_times(int(np.round(diff_sec)))
+
+            # if orig_time//self.dashboard.update_min != self.time//self.dashboard.update_min:
+            #     self.dashboard.reports.update_time_hist()
 
         self.display()
 
