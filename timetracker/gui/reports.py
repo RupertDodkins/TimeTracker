@@ -90,7 +90,7 @@ class ReportWidget(QWidget):
         self.actual_day_hours = np.arange(datetime.now().hour+float(datetime.now().minute)/60, 23, 0.25)
         self.ts_hist_loc = [0,1]
         self.completed_lines = [None, None, None]
-        self.completed_hists = [None, None, None]
+        self.completed_hists = [[None, None, None],[None, None, None]]
         self.ts_hist = None
 
         self.initialize_plots()
@@ -126,7 +126,6 @@ class ReportWidget(QWidget):
 
     def initialize_plots(self):
         self.goal_lines = []
-        # import matplotlib
         for y in range(self.ncols):
             axes = self.axes[:,y]
             for i, start, goal, ax, ylabel in zip(range(len(self.data.goals)), self.data.start_goals, self.data.goals,
@@ -141,7 +140,7 @@ class ReportWidget(QWidget):
                 if i == 2 and y ==0:
                     ax.set_xlabel('Clock time (hours)')
                     ax.set_ylim(-self.data.daily.todo_goal,self.data.daily.todo_goal)
-                if i < 2:# and y == 0:
+                if i < 2:
                     plt.setp(ax.get_xticklabels(), visible=False)
 
                 if y==0:
@@ -183,8 +182,6 @@ class ReportWidget(QWidget):
 
             m = goal/(self.stop_hour_val - self.start_hour_val)
             current_goal = m * (self.data.work_time_hours[-diff_sec:]-self.start_hour_val)
-            print(self.data.work_time_hours[-diff_sec:], current_goal)
-
             self.data.goal_hours[ig] = np.append(self.data.goal_hours[ig], current_goal)
 
             ax.fill_between(self.data.work_time_hours, metric, self.data.goal_hours[ig],
@@ -200,9 +197,22 @@ class ReportWidget(QWidget):
     def update_time_hist(self):
         for ig, hist, ax, metric, bins in zip(range(len(self.data.goals)), self.completed_hists, self.axes[:,1],
                                         self.data.metrics_history, self.data.metric_bins):
-            if hist is not None:
+
+            if None not in hist:
                 [b.remove() for b in hist]
             ax.collections.clear()
+
+            #todo make not slow
+            # where_thrive = self.data.goal_hours[ig] <= metric
+            #
+            # metric_heights, _ = np.histogram(metric, bins=bins)
+            #
+            # survive_heights, thrive_heights = np.array(
+            #     [(sum(b == False), sum(b == True)) for b in np.split(where_thrive, np.cumsum(metric_heights))]).T
+            #
+            # self.completed_hists[0][ig] = ax.barh(bins, thrive_heights, color='springgreen', alpha=0.5)
+            # self.completed_hists[1][ig] = ax.barh(bins, survive_heights, left=thrive_heights, color='orangered', alpha=0.5)
+
             _, _, self.completed_hists[ig] = ax.hist(metric, bins=bins,
                                                      color=(64./255,173./255,233./255), orientation='horizontal')
             self.canvas.draw()
