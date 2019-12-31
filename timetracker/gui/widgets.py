@@ -298,7 +298,7 @@ class TimerWidget(QWidget):
         now = datetime.now()
         hour = now.hour+float(now.minute)/60. + now.second/3600
 
-        if len(self.dashboard.data.work_time_hours) != 0:
+        if len(self.dashboard.data.work_time_hours) > 0 and diff_sec > 0:
             hours = np.linspace(self.dashboard.data.work_time_hours[-1], hour, diff_sec+1)[1:]
             work_times = np.linspace(self.dashboard.data.metrics_history[0][-1], self.dashboard.data.work_time, diff_sec+1)[1:]
             todo_scores = np.ones((diff_sec))*self.dashboard.data.daily.todo_score
