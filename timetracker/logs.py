@@ -52,17 +52,42 @@ class Logger():
         print(f"loading data from {self.config['data_logs']}/{self.day}")
         with h5py.File(self.config['data_logs'], 'r') as hf:
             day = hf.get(self.day)
-            for key, value in data.__dict__.items():
+            for data_key, value in data.__dict__.items():
                 try:
-                    print(key, value, day.get(key).value)
-                    setattr(data,key,day.get(key).value)
+                    attribute = day.get(data_key)
                 except AttributeError:
-                    print(f"Day '{day}' has no atrribute '{key}'. Using the default value '{value}'")
+                    self.atrribute_warning(day, data_key, attribute.value)
+                    continue
+
+                name = attribute.name.split('/')[-1]
+                if name in ['daily', 'weekly', 'monthly']:
+                    timespan_data = getattr(data, name)
+                    for timespan_key, value in timespan_data.__dict__.items():
+                        try:
+                            timespan_data = self.allocate_byte_data(timespan_data, timespan_key, attribute.get(timespan_key).value)
+                        except AttributeError:
+                            self.atrribute_warning(day, name + '.' + timespan_key, attribute.get(timespan_key))
+                            continue
+                    setattr(data, name, timespan_data)
+                else:
+                    data = self.allocate_byte_data(data, data_key, attribute.value)
+
             # pprint(data.__dict__)
-            # data.daily.errands = np.array([str(e)[2:-1] for e in data.daily.errands])
-            # data.weekly.errands = np.array([str(e)[2:-1] for e in data.weekly.errands])
-            # pprint(data.__dict__)
+
         return data
+
+    def atrribute_warning(self, day, key, value):
+        print(f"Day '{day}' has no atrribute '{key}'. Using the default value '{value}'")
+
+    def allocate_byte_data(self, data, key, dataset):
+        byte_list_type = self.categorize_byte_lists(dataset)
+        if byte_list_type == 1:
+            dataset = np.array([s.decode('utf-8') for s in dataset])
+        elif byte_list_type is not None:
+            raise NotImplementedError
+        setattr(data, key, dataset)
+        return data
+
 
     def allocate_string_data(self, key, value, day):
         # saving lists of strings is tricky in h5py hence all the code below
@@ -94,24 +119,12 @@ class Logger():
                     # recursively save if timespan subclass
                     timespan = day.create_group(data_key)
                     for timespan_key, value in value.__dict__.items():
-                        print(timespan_key, value, type(value))
+                        # print(timespan_key, value, type(value))
                         # day.create_dataset(key + '_' + timespan, data=value)
                         self.allocate_string_data(timespan_key, value, timespan)
                 else:
                     self.allocate_string_data(data_key, value, day)
                 # # saving lists of strings is tricky in h5py hence all the code below
-                # str_list_type = self.categorize_string_lists(value)
-                # if str_list_type is None:
-                #     print(key, value)
-                #     day.create_dataset(key, data=value)
-                # elif str_list_type == 1:  #e.g. key == weekly and dailly errands
-                #     asciiList = [n.encode("ascii", "ignore") for n in value]
-                #     day.create_dataset(key, dtype='S20', data=asciiList)
-                # elif str_list_type == 2:  #e.g. key == todos
-                #     day.create_dataset(key, data=np.string_(value))
-                # else:
-                #     print('This should be a single string. Not previously needed (until now?)')
-                #     raise NotImplementedError
 
 
     def categorize_string_lists(self, x):
@@ -124,6 +137,20 @@ class Logger():
                     return 1
             elif len(np.shape(x)) == 2:
                 if isinstance(x[0][0], str):
+                    return 2
+        except (TypeError, IndexError):
+            return None
+
+    def categorize_byte_lists(self, x):
+        """Check if bytes or a list containing bytes"""
+        if isinstance(x, bytes):
+            return 0
+        try:
+            if len(np.shape(x)) == 1:
+                if isinstance(x[0], bytes):
+                    return 1
+            elif len(np.shape(x)) == 2:
+                if isinstance(x[0][0], bytes):
                     return 2
         except (TypeError, IndexError):
             return None

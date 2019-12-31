@@ -19,7 +19,7 @@ class TimeScale():
                     print("multiplier more than one digit or 'x' if different spot")
                     raise NotImplementedError
                 self.errand_amounts[i] = errand[xloc+1]
-        self.errand_scores = np.zeros_like((len(errands)))
+        self.errand_scores = np.zeros((len(errands)))
 
 class Data():
     """ A class to store the data relevant for reports """
