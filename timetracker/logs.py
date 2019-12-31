@@ -54,14 +54,29 @@ class Logger():
             day = hf.get(self.day)
             for key, value in data.__dict__.items():
                 try:
+                    print(key, value, day.get(key).value)
                     setattr(data,key,day.get(key).value)
                 except AttributeError:
                     print(f"Day '{day}' has no atrribute '{key}'. Using the default value '{value}'")
             # pprint(data.__dict__)
-            data.daily_errands = np.array([str(e)[2:-1] for e in data.daily_errands])
-            data.weekly_errands = np.array([str(e)[2:-1] for e in data.weekly_errands])
+            # data.daily.errands = np.array([str(e)[2:-1] for e in data.daily.errands])
+            # data.weekly.errands = np.array([str(e)[2:-1] for e in data.weekly.errands])
             # pprint(data.__dict__)
         return data
+
+    def allocate_string_data(self, key, value, day):
+        # saving lists of strings is tricky in h5py hence all the code below
+        str_list_type = self.categorize_string_lists(value)
+        if str_list_type is None:
+            day.create_dataset(key, data=value)
+        elif str_list_type == 1:  # e.g. key == weekly and dailly errands
+            asciiList = [n.encode("ascii", "ignore") for n in value]
+            day.create_dataset(key, dtype='S20', data=asciiList)
+        elif str_list_type == 2:  # e.g. key == todos
+            day.create_dataset(key, data=np.string_(value))
+        else:
+            print('This should be a single string. Not previously needed (until now?)')
+            raise NotImplementedError
 
     def data_save(self, data):
         if os.path.exists(self.config['data_logs']):
@@ -74,19 +89,29 @@ class Logger():
 
         with h5py.File(self.config['data_logs'], mode='a') as hf:
             day = hf.create_group(self.day)
-            for key, value in data.__dict__.items():
-                # saving lists of strings is tricky in h5py hence all the code below
-                str_list_type = self.categorize_string_lists(value)
-                if str_list_type is None:
-                    day.create_dataset(key, data=value)
-                elif str_list_type == 1:  #e.g. key == weekly and dailly errands
-                    asciiList = [n.encode("ascii", "ignore") for n in value]
-                    day.create_dataset(key, dtype='S20', data=asciiList)
-                elif str_list_type == 2:  #e.g. key == todos
-                    day.create_dataset(key, data=np.string_(value))
+            for data_key, value in data.__dict__.items():
+                if data_key in ['daily', 'weekly', 'monthly']:
+                    # recursively save if timespan subclass
+                    timespan = day.create_group(data_key)
+                    for timespan_key, value in value.__dict__.items():
+                        print(timespan_key, value, type(value))
+                        # day.create_dataset(key + '_' + timespan, data=value)
+                        self.allocate_string_data(timespan_key, value, timespan)
                 else:
-                    print('This should be a single string. Not previously needed (until now?)')
-                    raise NotImplementedError
+                    self.allocate_string_data(data_key, value, day)
+                # # saving lists of strings is tricky in h5py hence all the code below
+                # str_list_type = self.categorize_string_lists(value)
+                # if str_list_type is None:
+                #     print(key, value)
+                #     day.create_dataset(key, data=value)
+                # elif str_list_type == 1:  #e.g. key == weekly and dailly errands
+                #     asciiList = [n.encode("ascii", "ignore") for n in value]
+                #     day.create_dataset(key, dtype='S20', data=asciiList)
+                # elif str_list_type == 2:  #e.g. key == todos
+                #     day.create_dataset(key, data=np.string_(value))
+                # else:
+                #     print('This should be a single string. Not previously needed (until now?)')
+                #     raise NotImplementedError
 
 
     def categorize_string_lists(self, x):
