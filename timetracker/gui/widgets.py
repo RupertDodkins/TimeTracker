@@ -308,11 +308,14 @@ class TimerWidget(QWidget):
             work_times = self.dashboard.data.work_time
             todo_scores = self.dashboard.data.daily.todo_score
         self.dashboard.data.work_time_hours = np.append(self.dashboard.data.work_time_hours, hours)
-        self.dashboard.data.metrics_history[0] = np.append(self.dashboard.data.metrics_history[0], work_times)
-        self.dashboard.data.metrics_history[1] = np.append(self.dashboard.data.metrics_history[1], todo_scores)
-        self.dashboard.data.metrics_history[2] = np.append(self.dashboard.data.metrics_history[2],
-                                                           (todo_scores/self.dashboard.data.daily.todo_goal
-                                                            - work_times/self.dashboard.data.goal_time)*100)
+        this_data = np.array([work_times, todo_scores, (
+        todo_scores / self.dashboard.data.daily.todo_goal - work_times / self.dashboard.data.goal_time) * 100])
+
+        if len(this_data.shape) == 1:  # first instance is shape 3. This makes shape 3,1
+            this_data = this_data[:,np.newaxis]
+
+        self.dashboard.data.metrics_history = np.append(self.dashboard.data.metrics_history, this_data, axis=1)
+
         self.dashboard.reports.update_lineplots(diff_sec)
         # self.dashboard.reports.update_time_hist()
 

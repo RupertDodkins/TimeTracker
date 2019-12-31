@@ -21,9 +21,10 @@ class ReportWidget(QWidget):
 
         self.data = parent.data
         self.ncols = ncols
-        self.start_hour_val = datetime.now().hour if datetime.now().hour > 9 else 9
-        self.stop_hour_val = 24 if datetime.now().hour >= 17 else 17
-        self.frac_hour_val = 0.5#0.125
+
+        self.start_hour_val = 9  #datetime.now().hour if datetime.now().hour > 9 else 9
+        self.stop_hour_val = 18  #24 if datetime.now().hour >= 17 else 17
+        self.frac_hour_val = 0.5 #0.125
 
         self.nrows, self.ncols = nrows, ncols
         self.facecolor = (49./255,54./255,59./255)
@@ -173,6 +174,7 @@ class ReportWidget(QWidget):
         diff_sec : int
                    the number of seconds since the code last updated (because of mac background mode)
         """
+        current_goals = []
         for ig, line, ax, goal, metric in zip(range(len(self.data.goals)), self.completed_lines, self.axes[:,0],
                                                self.data.goals, self.data.metrics_history):
             if line is not None:
@@ -184,19 +186,24 @@ class ReportWidget(QWidget):
             m = goal/(self.stop_hour_val - self.start_hour_val)
             new_inds = (diff_sec+1) if diff_sec > 0 else 2
             current_goal = m * (self.data.work_time_hours[-new_inds:]-self.start_hour_val)
-            self.data.goal_hours[ig] = np.append(self.data.goal_hours[ig][:-1], current_goal)
+            current_goals.append(current_goal)
+            # self.data.goal_hours[ig] = np.append(self.data.goal_hours[ig, :-1], current_goal)
 
+            goal_hours = np.append(self.data.goal_hours[ig, :-1], current_goal)
             # ax.plot(self.data.work_time_hours, self.data.goal_hours[ig], color='orange', marker='o')
 
-            ax.fill_between(self.data.work_time_hours, metric, self.data.goal_hours[ig],
-                            where=self.data.goal_hours[ig] >= metric, facecolor='orangered',
+            ax.fill_between(self.data.work_time_hours, metric, goal_hours,
+                            where=goal_hours >= metric, facecolor='orangered',
                             interpolate=True)
 
-            ax.fill_between(self.data.work_time_hours, metric, self.data.goal_hours[ig],
-                            where=self.data.goal_hours[ig] <= metric, facecolor='springgreen',
+            ax.fill_between(self.data.work_time_hours, metric, goal_hours,
+                            where=goal_hours <= metric, facecolor='springgreen',
                             interpolate=True)
 
             self.canvas.draw()
+
+
+        self.data.goal_hours = np.append(self.data.goal_hours[:, :-1], current_goals, axis=1)
 
     def update_time_hist(self):
         for ig, hist, ax, metric, bins in zip(range(len(self.data.goals)), self.completed_hists, self.axes[:,1],

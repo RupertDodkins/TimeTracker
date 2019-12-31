@@ -2,7 +2,7 @@
 import numpy as np
 
 class TimeScale():
-    """ Daily data read by Data """
+    """ data common to daily, weekly and monthly objects. Read by Data """
     def __init__(self, errands, todos=[], todo_goal=100):
         self.errands = np.array(errands)
         self.todos = todos
@@ -44,9 +44,9 @@ class Data():
         self.efficiency_goal = 0
 
         self.goals = [self.goal_time, self.daily.todo_goal, self.efficiency_goal]
-        self.goal_hours = [[],[],[]]
+        self.goal_hours =  np.empty((3,0))
         self.start_goals = [0, 0, self.efficiency_goal]
-        self.metrics_history = [[], [], []]
+        self.metrics_history = np.empty((3,0))
         self.metric_bins = [np.linspace(self.start_goals[0],self.goals[0],100),
                             np.linspace(self.start_goals[1],self.goals[1],100),
                             np.linspace(self.goals[2]-100,self.goals[2]+100,100) ]
