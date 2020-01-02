@@ -1,5 +1,11 @@
 #!/Users/dodkins/PythonProjects/TimeTracker/venv/bin/python
 
+"""
+Sharey for 1st and 2nd columns
+Set goal time to be 7 hours and change units
+
+"""
+
 import sys
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QFile, QTextStream

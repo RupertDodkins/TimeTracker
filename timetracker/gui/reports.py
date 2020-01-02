@@ -22,8 +22,8 @@ class ReportWidget(QWidget):
         self.data = parent.data
         self.ncols = ncols
 
-        self.start_hour_val = 9  #datetime.now().hour if datetime.now().hour > 9 else 9
-        self.stop_hour_val = 18  #24 if datetime.now().hour >= 17 else 17
+        self.start_hour_val = datetime.now().hour if datetime.now().hour > 9 else 9
+        self.stop_hour_val = 24 if datetime.now().hour >= 17 else 17
         self.frac_hour_val = 0.5 #0.125
 
         self.nrows, self.ncols = nrows, ncols
