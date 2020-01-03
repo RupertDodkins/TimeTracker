@@ -33,18 +33,14 @@ class ReportWidget(QWidget):
         self.toolbar = NavigationToolbar(self.canvas, self)
 
         gs = gridspec.GridSpec(self.nrows, self.ncols, width_ratios=[3, 1], wspace=0.05)
-
         for r in range(self.nrows):
             for c in range(self.ncols):
-                if r==0 and c==0:
-                    ax0 = self.figure.add_subplot(gs[0, 0])
-                elif c == 0:
-                    self.figure.add_subplot(gs[r,c], sharex = ax0)
-                else:
-                    self.figure.add_subplot(gs[r, c])
-
-
+                self.figure.add_subplot(gs[r, c])
         self.axes = np.array(self.figure.axes).reshape(self.nrows, self.ncols)
+        self.axes[0,0].get_shared_x_axes().join(self.axes[0,0], self.axes[1,0], self.axes[2,0])
+        for r in range(self.nrows):
+            self.axes[r,0].get_shared_y_axes().join(self.axes[r,0], self.axes[r,1])
+
         self.cax = []
 
         self.reportsHBox = QHBoxLayout()
@@ -107,8 +103,10 @@ class ReportWidget(QWidget):
         # for x in range(2):
         for y in range(3):
             self.axes[y, 0].set_xlim(xmin,xmax)#,ymin,ymax])
-            # ymin, ymax = self.data.metrics_history[y][-1] * np.array([0.5,1.5])
-            # self.axes[y, 0].set_ylim(ymin,ymax)#,ymin,ymax])
+            mins = np.array([np.min(self.data.metrics_history[y][-1]), self.data.start_goals[y]])
+            maxs = np.array([np.max(self.data.metrics_history[y][-1]), self.data.goals[y]])
+            ymin, ymax = np.array([min(mins), max(maxs)]) * np.array([0.5,1.5])
+            self.axes[y, 0].set_ylim(ymin,ymax)#,ymin,ymax])
 
     def update_start(self, text):
         self.start_hour_val = int(text)
