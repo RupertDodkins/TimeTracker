@@ -158,9 +158,14 @@ class ReportWidget(QWidget):
                                              self.data.start_goals, goals, self.axes[:,0]):
             line.pop(0).remove()
             self.data.goals[ig] = goal
-            goal_steps = np.linspace(start, goal, len(self.day_hours))  #factor of 3600 will be from here
+            goal_steps = np.linspace(start, goal, len(self.day_hours))
             ax.set_ylim(0,goal)
             self.goal_lines[ig] = ax.plot(self.day_hours, goal_steps, linestyle='--', color='w', linewidth=2)
+            if ig == 2:
+                ax.set_ylim(-self.data.daily.todo_goal, self.data.daily.todo_goal)
+            m = goal / (self.stop_hour_val - self.start_hour_val)
+            current_goal = m * (self.data.work_time_hours - self.start_hour_val)
+            self.data.goal_hours[ig] = current_goal
 
     def update_lineplots(self, diff_sec):
         """
