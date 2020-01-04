@@ -36,12 +36,12 @@ class Data():
 
         self.work_time = 0.
         self.pomodoros = 0
-        self.goal_time = 7 * 25 * 60
+        self.goal_time = 7
         self.pomodoro_times = []
         self.work_time_hours = []
         self.work_time_history = np.array([])
 
-        self.efficiency_goal = -20  # it takes time to complete tasks
+        self.efficiency_goal = 0  # -20 it takes time to complete tasks
 
         self.goals = [self.goal_time, self.daily.todo_goal, self.efficiency_goal]
         self.goal_hours =  np.empty((3,0))

@@ -1,4 +1,7 @@
-""" todo write docstring """
+""" todo write docstring
+
+todo get weekly todos loading each time
+ """
 
 import numpy as np
 from datetime import datetime
@@ -203,7 +206,7 @@ class TimerWidget(QWidget):
         self.dashboard.label_8.setText(str(self.dashboard.data.pomodoros))
 
     def update_goaltime(self):
-        self.dashboard.data.goal_time = self.dashboard.spinBox.value() * 25 * 60
+        self.dashboard.data.goal_time = self.dashboard.spinBox.value()
         self.dashboard.reports.update_goals(self.dashboard.data.goals)
 
     @Qt.pyqtSlot()
@@ -217,7 +220,7 @@ class TimerWidget(QWidget):
         if len(self.dashboard.data.work_time_hours) > 0:
             hour = self.timestamp_start.hour + self.timestamp_start.minute / 60. + self.timestamp_start.second / 3600
             self.dashboard.data.work_time_hours[-1] = hour
-            print('unpausings', hour)
+
 
     @Qt.pyqtSlot()
     def do_pause(self):
@@ -300,27 +303,28 @@ class TimerWidget(QWidget):
 
         if len(self.dashboard.data.work_time_hours) > 0 and diff_sec > 0:
             hours = np.linspace(self.dashboard.data.work_time_hours[-1], hour, diff_sec+1)[1:]
-            work_times = np.linspace(self.dashboard.data.metrics_history[0][-1], self.dashboard.data.work_time, diff_sec+1)[1:]
+            work_times = np.linspace(self.dashboard.data.metrics_history[0][-1], self.dashboard.data.work_time,
+                                     diff_sec + 1)[1:]/3600
             todo_scores = np.ones((diff_sec))*self.dashboard.data.daily.todo_score
             # print(np.round(diff_sec), self.dashboard.data.work_time_hours[-1], hour, hours)
         else:
             hours = hour
-            work_times = self.dashboard.data.work_time
+            work_times = self.dashboard.data.work_time/3600
             todo_scores = self.dashboard.data.daily.todo_score
         self.dashboard.data.work_time_hours = np.append(self.dashboard.data.work_time_hours, hours)
-        this_data = np.array([work_times, todo_scores, (
+        tick_data = np.array([work_times, todo_scores, (
         todo_scores / self.dashboard.data.daily.todo_goal - work_times / self.dashboard.data.goal_time) * 100])
 
-        if len(this_data.shape) == 1:  # first instance is shape 3. This makes shape 3,1
-            this_data = this_data[:,np.newaxis]
+        if len(tick_data.shape) == 1:  # first instance is shape (3). This makes shape (3,1)
+            tick_data = tick_data[:,np.newaxis]
 
-        self.dashboard.data.metrics_history = np.append(self.dashboard.data.metrics_history, this_data, axis=1)
+        self.dashboard.data.metrics_history = np.append(self.dashboard.data.metrics_history, tick_data, axis=1)
 
         self.dashboard.reports.update_lineplots(diff_sec)
         # self.dashboard.reports.update_time_hist()
 
     def prog_time(self):
-        self.dashboard.progressBar_2.setValue(self.dashboard.data.work_time/self.dashboard.data.goal_time * 100)
+        self.dashboard.progressBar_2.setValue(self.dashboard.data.work_time/3600/self.dashboard.data.goal_time * 100)
 
     def disp_time(self):
         self.dashboard.label_4.setText('%d' % (self.dashboard.data.work_time/60))
