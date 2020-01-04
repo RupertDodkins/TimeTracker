@@ -1,4 +1,5 @@
 """ GUI functionality """
+# todo integrate with google docs. Look how that pydashboard repo in bookmarks did it. Import that?
 
 import os
 import numpy as np

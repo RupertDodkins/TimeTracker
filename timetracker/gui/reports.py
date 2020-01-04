@@ -100,13 +100,12 @@ class ReportWidget(QWidget):
 
     def quick_zoom(self):
         xmin, xmax = self.data.work_time_hours[-1] + np.array([-0.5, 0.5])
-        # for x in range(2):
         for y in range(3):
-            self.axes[y, 0].set_xlim(xmin,xmax)#,ymin,ymax])
-            mins = np.array([np.min(self.data.metrics_history[y][-1]), self.data.start_goals[y]])
-            maxs = np.array([np.max(self.data.metrics_history[y][-1]), self.data.goals[y]])
-            ymin, ymax = np.array([min(mins), max(maxs)]) * np.array([0.5,1.5])
-            self.axes[y, 0].set_ylim(ymin,ymax)#,ymin,ymax])
+            self.axes[y, 0].set_xlim(xmin,xmax)
+            # mins = np.array([np.min(self.data.metrics_history[y][-1]), self.data.start_goals[y]])
+            # maxs = np.array([np.max(self.data.metrics_history[y][-1]), self.data.goals[y]])
+            # ymin, ymax = np.array([min(mins), max(maxs)]) * np.array([0.5,1.5])
+            # self.axes[y, 0].set_ylim(ymin,ymax)
 
     def update_start(self, text):
         self.start_hour_val = int(text)
@@ -228,14 +227,14 @@ class ReportWidget(QWidget):
             thrive = metric[where_thrive]
             survive = metric[~where_thrive]
             end = time.time()
-            print(ig, end - start)
+            # print(ig, end - start)
 
             start = time.time()
             colors = ['springgreen', 'orangered']
             _, _, self.completed_hists[ig] = ax.hist([thrive, survive], bins=bins,
                                                      color=colors, orientation='horizontal', stacked=True)
             end = time.time()
-            print(ig, end - start)
+            # print(ig, end - start)
 
             # start = time.time()
             # _, _, self.completed_hists[ig] = ax.hist(metric, bins=bins,
