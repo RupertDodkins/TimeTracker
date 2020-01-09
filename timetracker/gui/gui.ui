@@ -707,16 +707,6 @@ logged</string>
     <string>Exit</string>
    </property>
   </action>
-  <action name="actionlol">
-   <property name="text">
-    <string>lol</string>
-   </property>
-  </action>
-  <action name="actionlol_2">
-   <property name="text">
-    <string>lol</string>
-   </property>
-  </action>
   <action name="actionLoad_2">
    <property name="text">
     <string>Load</string>
