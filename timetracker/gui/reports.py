@@ -99,7 +99,7 @@ class ReportWidget(QWidget):
         parent.reports_groupBox.setLayout(parent.horizontalLayout_2)
 
     def quick_zoom(self):
-        xmin, xmax = self.data.work_time_hours[-1] + np.array([-0.5, 0.5])
+        xmin, xmax = self.data.work_time_hours[-1] + np.array([-2, 2])
         for y in range(3):
             self.axes[y, 0].set_xlim(xmin,xmax)
             # mins = np.array([np.min(self.data.metrics_history[y][-1]), self.data.start_goals[y]])
@@ -199,7 +199,7 @@ class ReportWidget(QWidget):
                             interpolate=True)
 
             ax.fill_between(self.data.work_time_hours, metric, goal_hours,
-                            where=goal_hours <= metric, facecolor='springgreen',
+                            where=goal_hours <= metric, facecolor='lime',
                             interpolate=True)
 
             self.canvas.draw()
@@ -235,7 +235,7 @@ class ReportWidget(QWidget):
             # print(ig, end - start)
 
             start = time.time()
-            colors = ['springgreen', 'orangered']
+            colors = ['lime', 'orangered']
             _, _, self.completed_hists[ig] = ax.hist([thrive, survive], bins=bins,
                                                      color=colors, orientation='horizontal', stacked=True)
             end = time.time()
