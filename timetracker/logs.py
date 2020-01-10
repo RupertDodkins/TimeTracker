@@ -96,7 +96,7 @@ class Logger():
             day.create_dataset(key, data=value)
         elif str_list_type == 1:  # e.g. key == weekly and dailly errands
             asciiList = [n.encode("ascii", "ignore") for n in value]
-            day.create_dataset(key, dtype='S20', data=asciiList)
+            day.create_dataset(key, dtype='S64', data=asciiList)
         elif str_list_type == 2:  # e.g. key == todos
             day.create_dataset(key, data=np.string_(value))
         else:
