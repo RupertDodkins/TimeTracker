@@ -1,5 +1,6 @@
 """ GUI functionality """
 # todo integrate with google docs. Look how that pydashboard repo in bookmarks did it. Import that?
+# todo quantify impact
 
 import os
 import numpy as np
@@ -44,11 +45,11 @@ class Dashboard(QMainWindow):
         errand_groupboxes = [self.daily_errands_groupBox, self.weekly_errands_groupBox, self.monthly_errands_groupBox]
         timescale_data = [self.data.daily, self.data.weekly,self.data.monthly]
         scales = ['daily', 'weekly', 'monthly']
-        self.errands = []
+        self.errandwidgets, self.todowidgets = [], []
         for todo_groupbox, errand_groupbox, timescale_data, scale in zip(todo_groupboxes, errand_groupboxes,
                                                                          timescale_data, scales):
-            TodoWidget(todo_groupbox, timescale_data)
-            self.errands.append(ErrandWidget(self, scale))
+            self.todowidgets.append(TodoWidget(todo_groupbox, timescale_data))
+            self.errandwidgets.append(ErrandWidget(self, scale))
         self.toolbarWidget()
         self.reports = ReportWidget(self)
 

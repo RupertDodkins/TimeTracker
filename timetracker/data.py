@@ -7,9 +7,9 @@ class TimeScale():
         self.errands = np.array(errands)
         self.todos = todos
         self.todo_goal = todo_goal
-
         self.todo_score = 0
-        self.numtodos = 0
+        self.points = np.zeros((1))
+        self.worths = np.ones((1))*20
         self.errand_score = 0
         self.errand_amounts = np.ones((len(errands)))
         for i, errand in enumerate(self.errands):

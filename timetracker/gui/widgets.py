@@ -7,7 +7,7 @@ import numpy as np
 from datetime import datetime
 from PyQt5 import Qt, QtCore
 from PyQt5.QtWidgets import QProgressBar, QCheckBox, QTextEdit, QLineEdit, QPushButton, QVBoxLayout, \
-    QHBoxLayout, QWidget, QLabel, QComboBox
+    QHBoxLayout, QWidget, QLabel
 from PyQt5.QtCore import QTimer
 
 class TodoWidget():
@@ -16,8 +16,8 @@ class TodoWidget():
         self.groupbox = groupbox
         self.timescale_data = timescale_data
 
+        self.std_worth = 20
         self.last_ind = 0
-        self.points = np.zeros((1))
         self.vbox = QVBoxLayout()
 
         self.checkBoxs = [QCheckBox()]
@@ -31,7 +31,7 @@ class TodoWidget():
         self.textEdits[0].setMaximumWidth(400)
         self.lineEdits[0].setMinimumWidth(41)
         self.lineEdits[0].setMaximumWidth(41)
-        self.lineEdits[0].setText(f'{20}')
+        self.lineEdits[0].setText(f'{self.std_worth}')
         self.pushButtons[0].setMinimumWidth(46)
         self.pushButtons[0].setMaximumWidth(46)
 
@@ -57,9 +57,24 @@ class TodoWidget():
         self.vbox.addWidget(self.progressBar)
         self.groupbox.setLayout(self.vbox)
 
+        if len(self.timescale_data.todos) >0:
+            self.load()
+
+    def load(self):
+        points = self.timescale_data.points*1  #store the points
+        worths = self.timescale_data.worths*1  #store the points
+        [self.add_todo() for _ in range(len(self.timescale_data.todos)-1)]
+        [textEdit.setText(todo) for textEdit, todo in zip(self.textEdits, self.timescale_data.todos)]
+        self.timescale_data.points = points
+        self.timescale_data.worths = worths
+        [checkbox.setChecked(True) for checkbox in self.checkBoxs[points!=0]]
+        [self.lineEdits[td].setText(str(int(worth))) for td, worth in enumerate(self.timescale_data.worths)]
+
     def add_todo(self):
         this_ind = len(self.hBoxs)
-        self.points = np.append(self.points,0)
+        self.timescale_data.points = np.append(self.timescale_data.points,0)
+        self.timescale_data.worths = np.append(self.timescale_data.worths,self.std_worth)
+        print(self.timescale_data.worths)
 
         self.checkBoxs = np.append(self.checkBoxs, QCheckBox())
         self.checkBoxs[this_ind].stateChanged.connect(self.clickBox_wrapper(this_ind))
@@ -116,7 +131,8 @@ class TodoWidget():
             self.pushButtons = np.delete(self.pushButtons, this_ind)
             self.hBoxs = np.delete(self.hBoxs, this_ind)
 
-            self.points = np.delete(self.points, this_ind)
+            self.timescale_data.points = np.delete(self.timescale_data.points, this_ind)
+            self.timescale_data.worths = np.delete(self.timescale_data.worths, this_ind)
 
             # recalculate everything
             for ind in range(1,self.last_ind):
@@ -127,7 +143,7 @@ class TodoWidget():
                 self.lineEdits[ind].textChanged.disconnect()
                 self.lineEdits[ind].textChanged.connect(self.score_changed_wrapper(ind))
             self.last_ind = len(self.hBoxs) - 1  # first row is 0
-            self.timescale_data.todo_score = np.sum(self.points)
+            self.timescale_data.todo_score = np.sum(self.timescale_data.points)
             # self.timescale_data.todo_goal = sum([int(lineEdits.text()) for lineEdits in self.lineEdits])
             self.update_text()
             self.progressBar.setValue(100 * self.timescale_data.todo_score / self.timescale_data.todo_goal)
@@ -137,8 +153,10 @@ class TodoWidget():
     def score_changed_wrapper(self, this_ind):
         def on_score_changed():
             if self.checkBoxs[this_ind].isChecked():
-                self.points[this_ind] = self.lineEdits[this_ind].text()
-            self.timescale_data.todo_score = np.sum(self.points)
+                self.timescale_data.points[this_ind] = self.lineEdits[this_ind].text()
+            self.timescale_data.todo_score = np.sum(self.timescale_data.points)
+            self.timescale_data.worths[this_ind] = int(self.lineEdits[this_ind].text())
+
             # try:
             #     self.timescale_data.todo_goal = sum([int(lineEdits.text()) for lineEdits in self.lineEdits])
             # except ValueError:
@@ -154,19 +172,21 @@ class TodoWidget():
         return clickBox
 
     def add_points(self, this_ind):
-        self.points[this_ind] = int(self.lineEdits[this_ind].text())
-        self.timescale_data.todo_score = np.sum(self.points)
+        self.timescale_data.points[this_ind] = int(self.lineEdits[this_ind].text())
+        self.timescale_data.todo_score = np.sum(self.timescale_data.points)
         # self.timescale_data.todo_goal = sum([int(lineEdits.text()) for lineEdits in self.lineEdits])
         self.progressBar.setValue(100*self.timescale_data.todo_score/self.timescale_data.todo_goal)
 
     def sub_points(self, this_ind):
-        self.points[this_ind] = 0
-        self.timescale_data.todo_score = np.sum(self.points)
+        self.timescale_data.points[this_ind] = 0
+        self.timescale_data.todo_score = np.sum(self.timescale_data.points)
         # self.timescale_data.todo_goal = sum([int(lineEdits.text()) for lineEdits in self.lineEdits])
         self.progressBar.setValue(100*self.timescale_data.todo_score/self.timescale_data.todo_goal)
 
     def update_text(self):
         self.timescale_data.todos = [textEdit.toPlainText() for textEdit in self.textEdits]
+
+    # def load(self):
 
 
 class TimerWidget(QWidget):
@@ -200,6 +220,9 @@ class TimerWidget(QWidget):
         self.dashboard.spinBox.valueChanged.connect(self.update_goaltime)
         self.dashboard.label_8.setText(str(self.dashboard.data.pomodoros))
         self.disp_time()
+
+    def load(self):
+        pass
 
     def update_pomodoros(self):
         self.dashboard.data.pomodoros += 1
@@ -357,6 +380,9 @@ class ErrandWidget(QWidget):
             errands_QProgressBar = getattr(self.dashboard, f"{scale}_errand_pb_{i}")
             errands_QProgressBar.setGeometry(col * 200 + 110, row * 30 + 30, 71, 20)
             errands_QProgressBar.setValue(0)
+
+    def load(self):
+        pass
 
     def daily_check_errand(self, text):
         errand_ind = np.where(text == self.dashboard.data.daily.errands)[0][0]
