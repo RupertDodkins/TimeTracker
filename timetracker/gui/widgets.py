@@ -57,7 +57,7 @@ class TodoWidget():
         self.vbox.addWidget(self.progressBar)
         self.groupbox.setLayout(self.vbox)
 
-        if len(self.timescale_data.todos) >0:
+        if len(self.timescale_data.todos) > 0:
             self.load()
 
     def load(self):
@@ -67,14 +67,14 @@ class TodoWidget():
         [textEdit.setText(todo) for textEdit, todo in zip(self.textEdits, self.timescale_data.todos)]
         self.timescale_data.points = points
         self.timescale_data.worths = worths
-        [checkbox.setChecked(True) for checkbox in self.checkBoxs[points!=0]]
+        [checkbox.setChecked(True) for checkbox in np.array(self.checkBoxs)[points!=0]]
         [self.lineEdits[td].setText(str(int(worth))) for td, worth in enumerate(self.timescale_data.worths)]
 
     def add_todo(self):
         this_ind = len(self.hBoxs)
         self.timescale_data.points = np.append(self.timescale_data.points,0)
         self.timescale_data.worths = np.append(self.timescale_data.worths,self.std_worth)
-        print(self.timescale_data.worths)
+        self.timescale_data.todos = np.append(self.timescale_data.todos,'')
 
         self.checkBoxs = np.append(self.checkBoxs, QCheckBox())
         self.checkBoxs[this_ind].stateChanged.connect(self.clickBox_wrapper(this_ind))
@@ -204,7 +204,7 @@ class TimerWidget(QWidget):
         self.powerhour_duration = 60 * 60
         self.break_duration = 5 * 60
         self.dashboard.update_sec = 1
-        self.dashboard.update_delay = 5
+        self.dashboard.update_delay = 30
         self.pause_time = self.pomodoro_duration
         # self.reset = QPushButton('PyQt5 button', self)
         self.dashboard.reset.clicked.connect(self.do_reset)
@@ -230,6 +230,7 @@ class TimerWidget(QWidget):
 
     def update_goaltime(self):
         self.dashboard.data.goal_time = self.dashboard.spinBox.value()
+        self.dashboard.data.goals[0] = self.dashboard.data.goal_time
         self.dashboard.reports.update_goals(self.dashboard.data.goals)
 
     @Qt.pyqtSlot()
@@ -319,6 +320,16 @@ class TimerWidget(QWidget):
                 self.dashboard.reports.update_time_hist()
 
         self.display()
+
+        if self.check_sleeping():
+            print('Time is during sleeping hours. Pausing')
+            self.do_pause()
+
+    def check_sleeping(self):
+        now = datetime.now()
+        hour = now.hour+float(now.minute)/60. + now.second/3600
+
+        return 0 < hour < 3  #todo add these time variables to config
 
     def update_work_time_times(self, diff_sec):
         now = datetime.now()
