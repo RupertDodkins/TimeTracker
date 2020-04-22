@@ -188,6 +188,8 @@ class ReportWidget(QWidget):
             m = goal/(self.stop_hour_val - self.start_hour_val)
             new_inds = (diff_sec+1) if diff_sec > 0 else 2
             current_goal = m * (self.data.work_time_hours[-new_inds:]-self.start_hour_val)
+            if np.any(current_goal > goal):
+                current_goal = np.ones_like(current_goal)*goal
             current_goals.append(current_goal)
             # self.data.goal_hours[ig] = np.append(self.data.goal_hours[ig, :-1], current_goal)
 
