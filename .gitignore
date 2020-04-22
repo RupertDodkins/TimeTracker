@@ -5,3 +5,4 @@ venv/**
 *.pyc
 timetracker/Dashboard/__pycache__
 timetracker/Dashboard/stopwatch*
+timetracker/credentials.json

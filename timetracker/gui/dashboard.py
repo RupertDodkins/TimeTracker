@@ -1,5 +1,5 @@
 """ GUI functionality """
-# todo integrate with google docs. Look how that pydashboard repo in bookmarks did it. Import that?
+# todo intengrate with rescue time. https://github.com/markwk/qs_ledger/blob/master/rescuetime/rescuetime_downloader.ipynb
 # todo quantify impact
 
 import os
@@ -13,6 +13,7 @@ from timetracker.logs import Logger
 from timetracker.data import Data
 from timetracker.gui.reports import ReportWidget
 from timetracker.gui.widgets import TodoWidget, TimerWidget, ErrandWidget
+from timetracker.gui.OneDayCalWidget import OneDayCalWidget
 
 class Dashboard(QMainWindow):
     def __init__(self):
@@ -52,15 +53,16 @@ class Dashboard(QMainWindow):
             self.errandwidgets.append(ErrandWidget(self, scale))
         self.toolbarWidget()
         self.reports = ReportWidget(self)
+        self.calendar = OneDayCalWidget(self)
 
     def frame(self):
         self.conc_mode = False
         title = 'Dashboard'
         self.setWindowTitle(title)
-        self.left = 200
-        self.top = 100
-        self.width = 1360
-        self.height = 825
+        self.left = 0
+        self.top = 0
+        self.width = 1730#1360
+        self.height = 930 #825
         self.setGeometry(self.left, self.top, self.width, self.height)
 
     def toolbarWidget(self):
