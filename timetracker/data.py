@@ -25,14 +25,12 @@ class Data():
     """ A class to store the data relevant for reports """
 
     def __init__(self):
-        self.daily = TimeScale(['Drink water x3', 'Meditate', 'Tidy desk', 'Tidy room',
-                                 'NN', 'Update YNAB', 'Floss x2', 'Email to zero', 'In by 9.30am',
-                                 'Phone Mum', 'No YouTube', 'No GUI code'])
+        self.daily = TimeScale(['Drink water x3', 'Meditate', 'Tidy room', 'NN', 'Update YNAB', 'Floss x2',
+                                'Email to zero', 'Up at 7am',  'Phone Mum', 'No YouTube'])
 
-        self.weekly = TimeScale(['Gym', 'Gymnastics x3', 'Read paper', 'Get nice plot',
-                            'Meal prep', 'Laundry x4', 'Write todos'])
+        self.weekly = TimeScale(['Read paper', 'Get nice plot', 'Meal prep', 'Laundry x4', 'Write todos'])
 
-        self.monthly = TimeScale(['Pay Rent', 'Pay Credit Card', 'Pay STILT x2', 'Write todos'])
+        self.monthly = TimeScale(['Pay Rent', 'Pay Credit Cards', 'Pay STILT', 'Write todos'])
 
         self.work_time = 0.
         self.pomodoros = 0
