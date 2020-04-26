@@ -155,7 +155,11 @@ class TodoWidget():
             if self.checkBoxs[this_ind].isChecked():
                 self.timescale_data.points[this_ind] = self.lineEdits[this_ind].text()
             self.timescale_data.todo_score = np.sum(self.timescale_data.points)
-            self.timescale_data.worths[this_ind] = int(self.lineEdits[this_ind].text())
+            try:
+                content = int(self.lineEdits[this_ind].text())
+            except ValueError:
+                content = 0
+            self.timescale_data.worths[this_ind] = content
 
             # try:
             #     self.timescale_data.todo_goal = sum([int(lineEdits.text()) for lineEdits in self.lineEdits])
